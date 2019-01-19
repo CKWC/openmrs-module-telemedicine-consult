@@ -1,0 +1,165 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.openmrs.module</groupId>
+		<artifactId>telemedicineconsult</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>telemedicineconsult-api</artifactId>
+	<packaging>jar</packaging>
+	<name>Telemedicine Consult API</name>
+	<description>API project for Telemedicine Consult</description>
+
+	<licenses>
+		<license>
+			<name>Mozilla Public License 2.0 with Healthcare Disclaimer</name>
+			<url>http://openmrs.org/license</url>
+		</license>
+	</licenses>
+
+	<organization>
+		<name>Connecting Kids With Care</name>
+		<url>https://connectingkidswithcare.org</url>
+	</organization>
+
+	<properties>
+		<openMRSVersion>2.0.0</openMRSVersion>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>org.openmrs.api</groupId>
+			<artifactId>openmrs-api</artifactId>
+			<version>${openMRSVersion}</version>
+			<type>jar</type>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openmrs.web</groupId>
+			<artifactId>openmrs-web</artifactId>
+			<version>${openMRSVersion}</version>
+			<type>jar</type>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openmrs.api</groupId>
+			<artifactId>openmrs-api</artifactId>
+			<version>${openMRSVersion}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openmrs.web</groupId>
+			<artifactId>openmrs-web</artifactId>
+			<version>${openMRSVersion}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openmrs.test</groupId>
+			<artifactId>openmrs-test</artifactId>
+			<version>${openMRSVersion}</version>
+			<type>pom</type>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>net.sourceforge.lpg</groupId>
+			<artifactId>lpgjavaruntime</artifactId>
+			<version>1.1.0.v200803061910</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.eclipse.emf.ecore</groupId>
+			<artifactId>xmi</artifactId>
+			<version>2.5.0.v200906151043</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.emf</groupId>
+			<artifactId>ecore</artifactId>
+			<version>2.5.0.v200906151043</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.eclipse</groupId>
+			<artifactId>ocl</artifactId>
+			<version>1.3.0.v200905271400</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.emf</groupId>
+			<artifactId>common</artifactId>
+			<version>2.5.0.v200906151043</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.eclipse.ocl</groupId>
+			<artifactId>ecore</artifactId>
+			<version>1.3.0.v200905271400</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openhealthtools.mdht.uml.cda</groupId>
+			<artifactId>ccd</artifactId>
+			<version>1.0.0.201109121753</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openhealthtools.mdht.uml.cda</groupId>
+			<artifactId>cdt</artifactId>
+			<version>1.0.0.201109121753</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openhealthtools.mdht.uml.cda</groupId>
+			<artifactId>hitsp</artifactId>
+			<version>1.0.0.201109121753</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openhealthtools.mdht.uml.cda</groupId>
+			<artifactId>ihe</artifactId>
+			<version>1.0.0.201109121753</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.openhealthtools.mdht.uml</groupId>
+			<artifactId>cda</artifactId>
+			<version>1.0.0.201109121753</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openhealthtools.mdht.uml.hl7</groupId>
+			<artifactId>datatypes</artifactId>
+			<version>1.0.0.201109121753</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openhealthtools.mdht.uml.hl7</groupId>
+			<artifactId>rim</artifactId>
+			<version>1.0.0.201109121753</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openhealthtools.mdht.uml.hl7</groupId>
+			<artifactId>vocab</artifactId>
+			<version>1.0.0.201109121753</version>
+		</dependency>
+
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>2.9.9</version>
+		</dependency>
+
+	</dependencies>
+
+</project>

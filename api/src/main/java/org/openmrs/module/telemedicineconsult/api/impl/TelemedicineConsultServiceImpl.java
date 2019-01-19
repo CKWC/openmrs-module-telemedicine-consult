@@ -1,0 +1,272 @@
+/**
+ * This Source Code Form is subject to the terms of the Mozilla Public License,
+ * v. 2.0. If a copy of the MPL was not distributed with this file, You can
+ * obtain one at http://mozilla.org/MPL/2.0/. OpenMRS is also distributed under
+ * the terms of the Healthcare Disclaimer located at http://openmrs.org/license.
+ *
+ * Copyright (C) OpenMRS Inc. OpenMRS is a registered trademark and the OpenMRS
+ * graphic logo is a trademark of OpenMRS Inc.
+ */
+package org.openmrs.module.telemedicineconsult.api.impl;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.NullArgumentException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.openhealthtools.mdht.uml.cda.ccd.CCDFactory;
+import org.openhealthtools.mdht.uml.cda.ccd.ContinuityOfCareDocument;
+import org.openhealthtools.mdht.uml.cda.util.CDAUtil;
+import org.openmrs.ImplementationId;
+import org.openmrs.Patient;
+import org.openmrs.PatientIdentifier;
+import org.openmrs.PatientIdentifierType;
+import org.openmrs.User;
+import org.openmrs.api.APIException;
+import org.openmrs.api.AdministrationService;
+import org.openmrs.api.PatientService;
+import org.openmrs.api.UserService;
+import org.openmrs.api.context.Context;
+import org.openmrs.api.impl.BaseOpenmrsService;
+import org.openmrs.module.telemedicineconsult.api.PatientSummaryExportService;
+import org.openmrs.module.telemedicineconsult.api.generators.AllergySectionGenerator;
+import org.openmrs.module.telemedicineconsult.api.generators.FamilyHistorySectionGenerator;
+import org.openmrs.module.telemedicineconsult.api.generators.HeaderGenerator;
+import org.openmrs.module.telemedicineconsult.api.generators.ImmunizationsSectionGenerator;
+import org.openmrs.module.telemedicineconsult.api.generators.LabResultsSectionGenerator;
+import org.openmrs.module.telemedicineconsult.api.generators.MedicationSectionGenerator;
+import org.openmrs.module.telemedicineconsult.api.generators.PlanOfCareSectionGenerator;
+import org.openmrs.module.telemedicineconsult.api.generators.ProblemsSectionGenerator;
+import org.openmrs.module.telemedicineconsult.api.generators.SocialHistorySectionGenerator;
+import org.openmrs.module.telemedicineconsult.api.generators.VitalSignsSectionGenerator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import org.openmrs.module.telemedicineconsult.Item;
+import org.openmrs.module.telemedicineconsult.api.TelemedicineConsultService;
+import org.openmrs.module.telemedicineconsult.api.dao.TelemedicineConsultDao;
+
+public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implements TelemedicineConsultService {
+	
+	protected final Log log = LogFactory.getLog(getClass());
+	
+	TelemedicineConsultDao dao;
+	
+	@Autowired
+	private AllergySectionGenerator allergySectionGenerator;
+	
+	@Autowired
+	private FamilyHistorySectionGenerator familyHistorySectionGenerator;
+	
+	@Autowired
+	private LabResultsSectionGenerator labResultsSectionGenerator;
+	
+	@Autowired
+	private MedicationSectionGenerator medicationSectionGenerator;
+	
+	@Autowired
+	private PlanOfCareSectionGenerator planOfCareSectionGenerator;
+	
+	@Autowired
+	private ProblemsSectionGenerator problemsSectionGenerator;
+	
+	@Autowired
+	private SocialHistorySectionGenerator socialHistorySectionGenerator;
+	
+	@Autowired
+	private VitalSignsSectionGenerator vitalSignsSectionGenerator;
+	
+	@Autowired
+	private ImmunizationsSectionGenerator immunizationsSectionGenerator;
+	
+	@Autowired
+	private HeaderGenerator headerGenerator;
+	
+	UserService userService;
+	
+	/**
+	 * Injected in moduleApplicationContext.xml
+	 */
+	public void setDao(TelemedicineConsultDao dao) {
+		this.dao = dao;
+	}
+	
+	/**
+	 * Injected in moduleApplicationContext.xml
+	 */
+	public void setUserService(UserService userService) {
+		this.userService = userService;
+	}
+	
+	@Override
+	public Item getItemByUuid(String uuid) throws APIException {
+		return dao.getItemByUuid(uuid);
+	}
+	
+	@Override
+	public Item saveItem(Item item) throws APIException {
+		if (item.getOwner() == null) {
+			item.setOwner(userService.getUser(1));
+		}
+		
+		return dao.saveItem(item);
+	}
+	
+	private ContinuityOfCareDocument produceCCD(Patient patient) {
+		ContinuityOfCareDocument ccd = CCDFactory.eINSTANCE.createContinuityOfCareDocument();
+		
+		ccd = headerGenerator.buildHeader(ccd, patient);
+		ccd = allergySectionGenerator.buildAllergies(ccd, patient);
+		ccd = problemsSectionGenerator.buildProblems(ccd, patient);
+		ccd = medicationSectionGenerator.buildMedication(ccd, patient);
+		ccd = vitalSignsSectionGenerator.buildVitalSigns(ccd, patient);
+		ccd = socialHistorySectionGenerator.buildSocialHistory(ccd, patient);
+		ccd = immunizationsSectionGenerator.buildImmunizations(ccd, patient);
+		ccd = labResultsSectionGenerator.buildLabResults(ccd, patient);
+		ccd = planOfCareSectionGenerator.buildPlanOfCare(ccd, patient);
+		ccd = familyHistorySectionGenerator.buildFamilyHistory(ccd, patient);
+		
+		return ccd;
+	}
+	
+	public void remoteReferral(ImplementationId impl, User u, Patient patient) throws NullArgumentException {
+		
+		if (impl == null)
+			throw new NullArgumentException("impl");
+		if (u == null)
+			throw new NullArgumentException("u");
+		if (patient == null)
+			throw new NullArgumentException("patient");
+		
+		try {
+			ContinuityOfCareDocument ccd = produceCCD(patient);
+			if (ccd != null) {
+				URL url = new URL("https://staging.connectingkidswithcare.org/api/emr/consult");
+				Map<String, String> parameters = new HashMap<String, String>();
+				parameters.put("first_name", u.getGivenName());
+				parameters.put("last_name", u.getFamilyName());
+				parameters.put("email", u.getUuid());
+				
+				parameters.put("name", impl.getName());
+				parameters.put("external_id", impl.getImplementationId());
+				parameters.put("external_source", "openmrs");
+				
+				// TODO: parameters.put("specialty_id", "");
+				
+				int resp = post(ccd, url, parameters);
+				log.fatal(resp);
+			}
+		}
+		catch (MalformedURLException e) {
+			//
+		}
+	}
+	
+	private int post(ContinuityOfCareDocument ccd, URL url, Map<String, String> parameters) {
+		BufferedReader rd = null;
+		int responseCode = 0;
+		String response = "";
+		StringBuilder data = new StringBuilder();
+		
+		try {
+			// Construct data
+			for (Map.Entry<String, String> entry : parameters.entrySet()) {
+				
+				// skip over invalid post variables
+				if (entry.getKey() == null || entry.getValue() == null) {
+					continue;
+				}
+				data.append("&"); // only append this if its _not_ the first
+				// datum
+				
+				// finally, setup the actual post string
+				data.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
+				data.append("=");
+				data.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+			}
+			
+			url = new URL(url.toString() + "?" + data.toString());
+			
+			ByteArrayOutputStream ms = new ByteArrayOutputStream();
+			CDAUtil.save(ccd, ms);
+			
+			// Send the data
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setDoOutput(true);
+			connection.setDoInput(true);
+			connection.setRequestMethod("POST");
+			connection.setRequestProperty("Content-Type", "application/xml");
+			connection.setRequestProperty("Content-Length", String.valueOf(ms.size()));
+			
+			ms.writeTo(connection.getOutputStream());
+			
+			// Get the response
+			rd = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
+			String line;
+			while ((line = rd.readLine()) != null) {
+				response = String.format("%s%s%n", response, line);
+			}
+			
+			responseCode = connection.getResponseCode();
+		}
+		catch (Exception e) {
+			log.warn("Exception while posting to : " + url, e);
+			log.warn("Reponse from server was: " + response);
+		}
+		finally {
+			if (rd != null) {
+				try {
+					rd.close();
+				}
+				catch (Exception e) { /* pass */
+				}
+			}
+		}
+		
+		return responseCode;
+	}
+	
+	private void saveToStream(ContinuityOfCareDocument ccd, String fileName) throws Exception {
+		FileOutputStream fos = null;
+		File file;
+		try {
+			// Specify the file path here
+			file = new File(fileName);
+			fos = new FileOutputStream(file);
+			
+			if (!file.exists()) {
+				file.createNewFile();
+			}
+			
+			CDAUtil.save(ccd, fos);
+		}
+		catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
+		finally {
+			try {
+				if (fos != null) {
+					fos.close();
+				}
+			}
+			catch (IOException ioe) {
+				// ...
+			}
+		}
+	}
+}
