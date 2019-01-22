@@ -1,4 +1,3 @@
-
 package org.openmrs.module.telemedicineconsult;
 
 import java.io.Serializable;

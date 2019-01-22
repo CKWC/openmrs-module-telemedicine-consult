@@ -1,12 +1,3 @@
-/**
- * This Source Code Form is subject to the terms of the Mozilla Public License,
- * v. 2.0. If a copy of the MPL was not distributed with this file, You can
- * obtain one at http://mozilla.org/MPL/2.0/. OpenMRS is also distributed under
- * the terms of the Healthcare Disclaimer located at http://openmrs.org/license.
- *
- * Copyright (C) OpenMRS Inc. OpenMRS is a registered trademark and the OpenMRS
- * graphic logo is a trademark of OpenMRS Inc.
- */
 package org.openmrs.module.telemedicineconsult.api.impl;
 
 import java.io.BufferedReader;
@@ -43,7 +34,6 @@ import org.openmrs.api.PatientService;
 import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.impl.BaseOpenmrsService;
-import org.openmrs.module.telemedicineconsult.api.PatientSummaryExportService;
 import org.openmrs.module.telemedicineconsult.api.generators.AllergySectionGenerator;
 import org.openmrs.module.telemedicineconsult.api.generators.FamilyHistorySectionGenerator;
 import org.openmrs.module.telemedicineconsult.api.generators.HeaderGenerator;
@@ -52,6 +42,7 @@ import org.openmrs.module.telemedicineconsult.api.generators.LabResultsSectionGe
 import org.openmrs.module.telemedicineconsult.api.generators.MedicationSectionGenerator;
 import org.openmrs.module.telemedicineconsult.api.generators.PlanOfCareSectionGenerator;
 import org.openmrs.module.telemedicineconsult.api.generators.ProblemsSectionGenerator;
+import org.openmrs.module.telemedicineconsult.api.generators.ReasonForRefferalSectionGenerator;
 import org.openmrs.module.telemedicineconsult.api.generators.SocialHistorySectionGenerator;
 import org.openmrs.module.telemedicineconsult.api.generators.VitalSignsSectionGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,6 +86,9 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 	private ImmunizationsSectionGenerator immunizationsSectionGenerator;
 	
 	@Autowired
+	private ReasonForRefferalSectionGenerator reasonForRefferalSectionGenerator;
+	
+	@Autowired
 	private HeaderGenerator headerGenerator;
 	
 	UserService userService;
@@ -127,15 +121,16 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 		return dao.saveItem(item);
 	}
 	
-	private ContinuityOfCareDocument produceCCD(Patient patient) {
+	private ContinuityOfCareDocument produceCCD(Patient patient, User u, String reason) {
 		ContinuityOfCareDocument ccd = CCDFactory.eINSTANCE.createContinuityOfCareDocument();
 		
-		ccd = headerGenerator.buildHeader(ccd, patient);
+		ccd = headerGenerator.buildHeader(ccd, patient, u);
 		ccd = allergySectionGenerator.buildAllergies(ccd, patient);
 		ccd = problemsSectionGenerator.buildProblems(ccd, patient);
 		ccd = medicationSectionGenerator.buildMedication(ccd, patient);
 		ccd = vitalSignsSectionGenerator.buildVitalSigns(ccd, patient);
 		ccd = socialHistorySectionGenerator.buildSocialHistory(ccd, patient);
+		ccd = reasonForRefferalSectionGenerator.buildReasonForRefferal(ccd, patient, reason);
 		ccd = immunizationsSectionGenerator.buildImmunizations(ccd, patient);
 		ccd = labResultsSectionGenerator.buildLabResults(ccd, patient);
 		ccd = planOfCareSectionGenerator.buildPlanOfCare(ccd, patient);
@@ -144,7 +139,8 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 		return ccd;
 	}
 	
-	public void remoteReferral(ImplementationId impl, User u, Patient patient) throws NullArgumentException {
+	public void remoteReferral(ImplementationId impl, User u, Patient patient, String reason, Integer specialtyId)
+	        throws NullArgumentException {
 		
 		if (impl == null)
 			throw new NullArgumentException("impl");
@@ -154,21 +150,23 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 			throw new NullArgumentException("patient");
 		
 		try {
-			ContinuityOfCareDocument ccd = produceCCD(patient);
+			ContinuityOfCareDocument ccd = produceCCD(patient, u, reason);
 			if (ccd != null) {
 				URL url = new URL("https://staging.connectingkidswithcare.org/api/emr/consult");
 				Map<String, String> parameters = new HashMap<String, String>();
-				parameters.put("first_name", u.getGivenName());
-				parameters.put("last_name", u.getFamilyName());
-				parameters.put("email", u.getUuid());
+					parameters.put("first_name", u.getGivenName());
+					parameters.put("last_name", u.getFamilyName());
+					parameters.put("email", u.getUuid());
+					
+					parameters.put("name", impl.getName());
+					parameters.put("external_id", impl.getImplementationId());
+					parameters.put("external_source", "openmrs");
+					parameters.put("specialty_id", specialtyId + "");
 				
-				parameters.put("name", impl.getName());
-				parameters.put("external_id", impl.getImplementationId());
-				parameters.put("external_source", "openmrs");
+				String fileName = patient.getId().toString() + ".xml";
+				saveToStream(ccd, fileName);
 				
-				// TODO: parameters.put("specialty_id", "");
-				
-				int resp = post(ccd, url, parameters);
+				int resp = post(ccd, url, parameters, fileName);
 				log.fatal(resp);
 			}
 		}
@@ -177,7 +175,7 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 		}
 	}
 	
-	private int post(ContinuityOfCareDocument ccd, URL url, Map<String, String> parameters) {
+	private int post(ContinuityOfCareDocument ccd, URL url, Map<String, String> parameters, String fileName) {
 		BufferedReader rd = null;
 		int responseCode = 0;
 		String response = "";
@@ -210,10 +208,10 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 			connection.setDoOutput(true);
 			connection.setDoInput(true);
 			connection.setRequestMethod("POST");
-			connection.setRequestProperty("Content-Type", "application/xml");
-			connection.setRequestProperty("Content-Length", String.valueOf(ms.size()));
-			
-			ms.writeTo(connection.getOutputStream());
+				connection.setRequestProperty("Content-Type", "application/xml");
+				connection.setRequestProperty("Content-Length", String.valueOf(ms.size()));
+				
+				ms.writeTo(connection.getOutputStream());
 			
 			// Get the response
 			rd = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
@@ -241,7 +239,7 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 		return responseCode;
 	}
 	
-	private void saveToStream(ContinuityOfCareDocument ccd, String fileName) throws Exception {
+	private void saveToStream(ContinuityOfCareDocument ccd, String fileName) {
 		FileOutputStream fos = null;
 		File file;
 		try {
@@ -253,10 +251,11 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 				file.createNewFile();
 			}
 			
+			log.warn("saving to: " + fileName);
 			CDAUtil.save(ccd, fos);
 		}
-		catch (IOException ioe) {
-			ioe.printStackTrace();
+		catch (Exception e) {
+			e.printStackTrace();
 		}
 		finally {
 			try {

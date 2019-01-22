@@ -1,5 +1,6 @@
-${ implementationId }
+<% if (implementationId) { %>
 ${ implementationId.implementationId }
+<% } %>
 
 <form id="submit-form" method="post" action="${ ui.actionLink("telemedicineconsult", "remoteReferral", "submit") }">
     <input type="hidden" name="patientId" value="${ patient.id }" />
@@ -7,6 +8,7 @@ ${ implementationId.implementationId }
     <label for="reason">Reason for referral</label>
     <textarea placeholder="Reason for referral..." name="reason" rows="4" cols="50"></textarea>
 
+    <label for="specialty">Select a specialty</label>
     <select name="specialty" class="form-control" style="">
         <option value="">(Select a specialty)</option>
         <optgroup label="Medical">
@@ -70,5 +72,7 @@ ${ implementationId.implementationId }
         </optgroup>
     </select>
 
-    <input type="submit" value="Submit">
+    <center>
+        <input type="submit" value="Submit">
+    </center>
 </form>

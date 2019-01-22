@@ -7,34 +7,19 @@
     ];
 </script>
 
-<h1>Telemedicine consult</h1>
-
-<p>Consultation services are provided at no cost by volunteer licensed medical professionals with a focused on underserved patients.</p>
-<p>If you have questions, please visit <a href="https://connectingkidswithcare.org/clinics/">our website</a>.</p>
+<h1>Telemedicine consult
+    
+    <% if (patient) { %>
+    for <b>$patient.familyName, $patient.givenName</<b>
+    <% } %>
+</h1>
 
 ${ui.includeFragment("telemedicineconsult", "remoteReferral")}
 
-<pre>
-<% if (context.authenticated) { %>
-    And a special hello to you, $context.authenticatedUser.personName.fullName
-GN     $context.authenticatedUser.personName.givenName
-FN     $context.authenticatedUser.personName.familyName
-SF     $context.authenticatedUser.personName.degree
+<p>&nbsp;</p>
 
-    Your roles are:
-    <% context.authenticatedUser.roles.findAll { !it.retired }.each { %>
-        $it.role ($it.description)
-    <% } %>
-<% } else { %>
-    You are not logged in.
-<% } %>
-</pre>
-
-<% if (patient) { %>
-$patient.givenName $patient.familyName
-
-<% } %>
-
+<p align="center"><i>Consultation services are provided at no cost by volunteer licensed medical professionals with a focused on underserved patients.<br />
+    If you have questions, please visit <a href="https://connectingkidswithcare.org/clinics/">our website</a>.<i></p>
 
 <p>&nbsp;</p>
 

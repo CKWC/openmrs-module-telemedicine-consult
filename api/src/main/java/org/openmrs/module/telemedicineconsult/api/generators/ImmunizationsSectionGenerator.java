@@ -30,7 +30,9 @@ import java.util.TreeMap;
 @Component
 public class ImmunizationsSectionGenerator {
 	
-	private static final int WEIGHT_CONCEPT_ID = 5089;
+	private static final String CONCEPT_SOURCE = "CIEL";
+	
+	private static final String WEIGHT_CONCEPT_CODE = "5089";
 	
 	private static final int CD4_VALUE_CONCEPT_ID = 159375;
 	
@@ -154,7 +156,7 @@ public class ImmunizationsSectionGenerator {
 	
 	private String buildWeightSection(Patient patient) {
 		StringBuilder builder = new StringBuilder();
-		Concept weight = Context.getConceptService().getConceptByMapping("27113001", "SNOMED CT");
+		Concept weight = Context.getConceptService().getConceptByMapping(WEIGHT_CONCEPT_CODE, CONCEPT_SOURCE);
 		ConceptNumeric weightn = Context.getConceptService().getConceptNumeric(weight.getId());
 		
 		List<Obs> listOfObservations = utils.extractObservations(patient, weight);

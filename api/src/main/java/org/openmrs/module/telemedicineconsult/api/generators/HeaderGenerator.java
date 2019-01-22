@@ -59,6 +59,7 @@ import org.openmrs.PersonAddress;
 import org.openmrs.PersonAttribute;
 import org.openmrs.Provider;
 import org.openmrs.Relationship;
+import org.openmrs.User;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.telemedicineconsult.api.utils.ExportCcdUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,7 +80,7 @@ public class HeaderGenerator {
 	@Autowired
 	private ExportCcdUtils utils;
 	
-	public ContinuityOfCareDocument buildHeader(ContinuityOfCareDocument ccd, Patient patient) {
+	public ContinuityOfCareDocument buildHeader(ContinuityOfCareDocument ccd, Patient patient, User u) {
 		
 		Date d = new Date();
 		ccd.setEffectiveTime(utils.buildEffectiveTime(d));
@@ -184,10 +185,15 @@ public class HeaderGenerator {
 		patientRole.setProviderOrganization(providerOrganization);
 		ccd.addPatientRole(patientRole);
 		Author author = CDAFactory.eINSTANCE.createAuthor();
+		author.getTemplateIds().add(utils.buildTemplateID("2.16.840.1.113883.10.20.22.4.119", null, null));
 		author.setTime(utils.buildEffectiveTime(d));
+		
 		AssignedAuthor assignedAuthor = CDAFactory.eINSTANCE.createAssignedAuthor();
 		II authorId = DatatypesFactory.eINSTANCE.createII();
+		authorId.setExtension(u.getUuid());
+		authorId.setRoot(u.getUuid());
 		assignedAuthor.getIds().add(authorId);
+		
 		Organization representedOrganization = CDAFactory.eINSTANCE.createOrganization();
 		AD representedOrganizationAddress = DatatypesFactory.eINSTANCE.createAD();
 		representedOrganizationAddress.addCounty("");

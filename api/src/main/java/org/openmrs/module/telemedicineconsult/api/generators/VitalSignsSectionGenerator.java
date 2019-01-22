@@ -29,25 +29,47 @@ public class VitalSignsSectionGenerator {
 	
 	protected final Log log = LogFactory.getLog(getClass());
 	
-	private static final int WEIGHT_CONCEPT_ID = 5089;
+	private static final String CONCEPT_SOURCE = "CIEL";
 	
-	private static final int CD4_VALUE_CONCEPT_ID = 159375;
+	private static final String WEIGHT_CONCEPT_CODE = "5089";
 	
-	private static final int EXAM_CONCEPT_START_ID = 1120;
+	private static final String SKIN_EXAM_CONCEPT_CODE = "1120";
 	
-	private static final int EXAM_CONCEPT_END_ID = 1129;
+	private static final String LYMPH_NODES_EXAM_CONCEPT_CODE = "1121";
 	
-	private static final int MOUTH_EXAM_CONCEPT_ID = 163308;
+	private static final String HEENT_EXAM_CONCEPT_CODE = "1122";
 	
-	private static final int EYE_EXAM_CONCEPT_ID = 163309;
+	private static final String CHEST_EXAM_CONCEPT_CODE = "1123";
 	
-	private static final int NOSE_EXAM_CONCEPT_ID = 163336;
+	private static final String CARDIAC_EXAM_CONCEPT_CODE = "1124";
 	
-	private static final int EAR_EXAM_CONCEPT_ID = 163337;
+	private static final String ABDOMINAL_EXAM_CONCEPT_CODE = "1125";
 	
-	public static final int ABNORMAL_CONCEPT_ID = 1116;
+	private static final String UROGENITAL_EXAM_CONCEPT_CODE = "1126";
 	
-	public static final int AUTRES_CONCLUSION_CONCEPT_ID = 1284;
+	private static final String EXTREMITY_EXAM_CONCEPT_CODE = "1127";
+	
+	private static final String MUSCULOSKELETAL_EXAM_CONCEPT_CODE = "1128";
+	
+	private static final String NEUROLOGIC_EXAM_CONCEPT_CODE = "1129";
+	
+	private static final String PSYCHIATRIC_EXAM_CONCEPT_CODE = "1130";
+	
+	private static final String MOUTH_EXAM_CONCEPT_CODE = "163308";
+	
+	private static final String EYE_EXAM_CONCEPT_CODE = "163309";
+	
+	private static final String NOSE_EXAM_CONCEPT_CODE = "163336";
+	
+	private static final String EAR_EXAM_CONCEPT_CODE = "163337";
+	
+	private static final String ABNORMAL_CONCEPT_CODE = "1116";
+	
+	private static final String PROBLEMS_LIST_CONCEPT_CODE = "1284";
+	
+	private Concept WEIGHT_CONCEPT = null;
+	
+	private Concept ABNORMAL_CONCEPT = null;
 	
 	@Autowired
 	private ExportCcdUtils utils;
@@ -55,7 +77,19 @@ public class VitalSignsSectionGenerator {
 	@Autowired
 	private PatientSummaryExportDAO dao;
 	
+	private void loadConcepts() {
+		if (WEIGHT_CONCEPT == null) {
+			WEIGHT_CONCEPT = Context.getConceptService().getConceptByMapping(WEIGHT_CONCEPT_CODE, CONCEPT_SOURCE);
+		}
+		
+		if (ABNORMAL_CONCEPT == null) {
+			ABNORMAL_CONCEPT = Context.getConceptService().getConceptByMapping(ABNORMAL_CONCEPT_CODE, CONCEPT_SOURCE);
+		}
+	}
+	
 	public ContinuityOfCareDocument buildVitalSigns(ContinuityOfCareDocument ccd, Patient patient) {
+		loadConcepts();
+		
 		VitalSignsSection section = CCDFactory.eINSTANCE.createVitalSignsSection();
 		
 		section.getTemplateIds().add(utils.buildTemplateID("2.16.840.1.113883.10.20.22.2.4"));
@@ -66,11 +100,9 @@ public class VitalSignsSectionGenerator {
 		
 		builder.append(buildWeightSection(patient));
 		
-		builder.append(buildCd4Section(patient));
-		
 		builder.append(buildConclusionSection(patient));
 		
-		builder.append(buildOtherConclusionSection(patient));
+		builder.append(buildProblemListSection(patient));
 		log.error(builder.toString());
 		
 		utils.createStrucDocText(section, builder.toString());
@@ -78,10 +110,10 @@ public class VitalSignsSectionGenerator {
 		return ccd;
 	}
 	
-	private String buildOtherConclusionSection(Patient patient) {
+	private String buildProblemListSection(Patient patient) {
 		StringBuilder builder = new StringBuilder();
 		SortedMap<String, List<String>> otherConclusions = new TreeMap<String, List<String>>(utils.descendingDateComparator);
-		Concept concept = Context.getConceptService().getConcept(AUTRES_CONCLUSION_CONCEPT_ID);
+		Concept concept = Context.getConceptService().getConcept(PROBLEMS_LIST_CONCEPT_CODE);
 		List<Obs> listOfObservations = utils.extractObservations(patient, concept);
 		
 		for (Obs obs : listOfObservations) {
@@ -101,7 +133,7 @@ public class VitalSignsSectionGenerator {
 		}
 		
 		if (!otherConclusions.isEmpty()) {
-			builder.append(utils.buildSubTitle("Autres conlusions:"));
+			builder.append(utils.buildSubTitle("Other conlusions:"));
 			builder.append(utils.buildSectionHeader());
 			for (Map.Entry<String, List<String>> conclusion : otherConclusions.entrySet()) {
 				builder.append(utils.buildSectionContent(conclusion.getKey(),
@@ -112,58 +144,42 @@ public class VitalSignsSectionGenerator {
 		return builder.toString();
 	}
 	
-	private String buildCd4Section(Patient patient) {
-		StringBuilder builder = new StringBuilder();
-		ConceptNumeric cd4 = Context.getConceptService().getConceptNumeric(CD4_VALUE_CONCEPT_ID);
-		List<Obs> listOfObservations = utils.extractObservations(patient, cd4);
-		if (!listOfObservations.isEmpty()) {
-			builder.append(utils.buildSubTitle("Historique de poids"));
-			builder.append(utils.buildSectionHeader("Résultat", "Unité", "Date"));
-			for (Obs obs : listOfObservations) {
-				String value = obs.getValueNumeric().toString();
-				builder.append(utils.buildSectionContent(value, "/mm3", utils.format(obs.getDateCreated())));
-			}
-			builder.append(utils.buildSectionFooter());
-		}
-		return builder.toString();
-	}
-	
 	private String buildConclusionSection(Patient patient) {
 		StringBuilder builder = new StringBuilder();
-		SortedMap<String, List<String>> conclusions = new TreeMap<String, List<String>>(utils.descendingDateComparator);
-		for (int i = EXAM_CONCEPT_START_ID; i < EXAM_CONCEPT_END_ID; i++) {
-			extractConclusions(patient, conclusions, i);
-		}
-		
-		extractConclusions(patient, conclusions, MOUTH_EXAM_CONCEPT_ID);
-		extractConclusions(patient, conclusions, EYE_EXAM_CONCEPT_ID);
-		extractConclusions(patient, conclusions, NOSE_EXAM_CONCEPT_ID);
-		extractConclusions(patient, conclusions, EAR_EXAM_CONCEPT_ID);
-		
-		if (!conclusions.isEmpty()) {
-			builder.append(utils.buildSubTitle("Conclusions d'examen clinique"));
-			builder.append(utils.buildSectionHeader("Date de visite", "Résultats anormals"));
-			for (Map.Entry<String, List<String>> conclusion : conclusions.entrySet()) {
-				builder.append(utils.buildSectionContent(conclusion.getKey(),
-				    Arrays.toString(conclusion.getValue().toArray()).replace("[", "").replace("]", "")));
-			}
-			builder.append(utils.buildSectionFooter());
-		}
+		/*
+		 * SortedMap<String, List<String>> conclusions = new TreeMap<String,
+		 * List<String>>(utils.descendingDateComparator); for (int i =
+		 * EXAM_CONCEPT_START_ID; i < EXAM_CONCEPT_END_ID; i++) {
+		 * extractConclusions(patient, conclusions, i); }
+		 * 
+		 * extractConclusions(patient, conclusions, MOUTH_EXAM_CONCEPT_ID);
+		 * extractConclusions(patient, conclusions, EYE_EXAM_CONCEPT_ID);
+		 * extractConclusions(patient, conclusions, NOSE_EXAM_CONCEPT_ID);
+		 * extractConclusions(patient, conclusions, EAR_EXAM_CONCEPT_ID);
+		 * 
+		 * if (!conclusions.isEmpty()) {
+		 * builder.append(utils.buildSubTitle("Conclusions d'examen clinique"));
+		 * builder.append(utils.buildSectionHeader("Date de visite",
+		 * "Résultats anormals")); for (Map.Entry<String, List<String>> conclusion :
+		 * conclusions.entrySet()) {
+		 * builder.append(utils.buildSectionContent(conclusion.getKey(),
+		 * Arrays.toString(conclusion.getValue().toArray()).replace("[",
+		 * "").replace("]", ""))); } builder.append(utils.buildSectionFooter()); }
+		 */
 		return builder.toString();
 	}
 	
 	private String buildWeightSection(Patient patient) {
 		StringBuilder builder = new StringBuilder();
-		Concept weight = Context.getConceptService().getConceptByMapping("27113001", "SNOMED CT");
-		ConceptNumeric weightn = Context.getConceptService().getConceptNumeric(weight.getId());
+		ConceptNumeric weight = Context.getConceptService().getConceptNumeric(WEIGHT_CONCEPT.getId());
 		
-		List<Obs> listOfObservations = utils.extractObservations(patient, weight);
+		List<Obs> listOfObservations = utils.extractObservations(patient, WEIGHT_CONCEPT);
 		if (!listOfObservations.isEmpty()) {
 			builder.append(utils.buildSubTitle("Weight History"));
 			builder.append(utils.buildSectionHeader("Weight", "Unit", "Date"));
 			for (Obs obs : listOfObservations) {
 				String value = obs.getValueNumeric().toString();
-				builder.append(utils.buildSectionContent(value, weightn.getUnits(), utils.format(obs.getDateCreated())));
+				builder.append(utils.buildSectionContent(value, weight.getUnits(), utils.format(obs.getDateCreated())));
 			}
 			builder.append(utils.buildSectionFooter());
 		}
@@ -175,7 +191,7 @@ public class VitalSignsSectionGenerator {
 		Concept examConcept = Context.getConceptService().getConcept(i);
 		listOfObservations = utils.extractObservations(patient, examConcept);
 		for (Obs obs : listOfObservations) {
-			if (obs.getValueCoded().getConceptId() == ABNORMAL_CONCEPT_ID) {
+			if (obs.getValueCoded() == ABNORMAL_CONCEPT) {
 				if (conclusions.get(utils.format(obs.getDateCreated())) == null) {
 					List<String> concepts = new ArrayList<String>();
 					concepts.add(examConcept.getDisplayString());
