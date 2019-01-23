@@ -18,7 +18,7 @@ ${ui.includeFragment("telemedicineconsult", "remoteReferral")}
 
 <p>&nbsp;</p>
 
-<p align="center"><i>Consultation services are provided at no cost by volunteer licensed medical professionals with a focused on underserved patients.<br />
+<p align="center"><i>Consultation services are provided at no cost by volunteer licensed medical professionals with a focus on underserved patients.<br />
     If you have questions, please visit <a href="https://connectingkidswithcare.org/clinics/">our website</a>.<i></p>
 
 <p>&nbsp;</p>

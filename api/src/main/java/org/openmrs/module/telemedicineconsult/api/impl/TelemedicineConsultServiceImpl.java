@@ -20,6 +20,8 @@ import java.util.Map;
 import org.apache.commons.lang.NullArgumentException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.openhealthtools.mdht.uml.cda.ccd.CCDFactory;
 import org.openhealthtools.mdht.uml.cda.ccd.ContinuityOfCareDocument;
 import org.openhealthtools.mdht.uml.cda.util.CDAUtil;
@@ -47,8 +49,7 @@ import org.openmrs.module.telemedicineconsult.api.generators.SocialHistorySectio
 import org.openmrs.module.telemedicineconsult.api.generators.VitalSignsSectionGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import org.openmrs.module.telemedicineconsult.Item;
+import org.openmrs.module.telemedicineconsult.Consult;
 import org.openmrs.module.telemedicineconsult.api.TelemedicineConsultService;
 import org.openmrs.module.telemedicineconsult.api.dao.TelemedicineConsultDao;
 
@@ -108,17 +109,8 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 	}
 	
 	@Override
-	public Item getItemByUuid(String uuid) throws APIException {
-		return dao.getItemByUuid(uuid);
-	}
-	
-	@Override
-	public Item saveItem(Item item) throws APIException {
-		if (item.getOwner() == null) {
-			item.setOwner(userService.getUser(1));
-		}
-		
-		return dao.saveItem(item);
+	public Consult getConsultByUuid(String uuid) throws APIException {
+		return dao.getConsultByUuid(uuid);
 	}
 	
 	private ContinuityOfCareDocument produceCCD(Patient patient, User u, String reason) {
@@ -139,7 +131,7 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 		return ccd;
 	}
 	
-	public void remoteReferral(ImplementationId impl, User u, Patient patient, String reason, Integer specialtyId)
+	public Consult remoteReferral(ImplementationId impl, User u, Patient patient, String reason, Integer specialtyId)
 	        throws NullArgumentException {
 		
 		if (impl == null)
@@ -154,34 +146,51 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 			if (ccd != null) {
 				URL url = new URL("https://staging.connectingkidswithcare.org/api/emr/consult");
 				Map<String, String> parameters = new HashMap<String, String>();
-					parameters.put("first_name", u.getGivenName());
-					parameters.put("last_name", u.getFamilyName());
-					parameters.put("email", u.getUuid());
-					
-					parameters.put("name", impl.getName());
-					parameters.put("external_id", impl.getImplementationId());
-					parameters.put("external_source", "openmrs");
-					parameters.put("specialty_id", specialtyId + "");
+				parameters.put("first_name", u.getGivenName());
+				parameters.put("last_name", u.getFamilyName());
+				parameters.put("email", u.getUuid());
+				
+				parameters.put("name", impl.getName());
+				parameters.put("external_id", impl.getImplementationId());
+				parameters.put("external_source", "openmrs");
+				parameters.put("specialty_id", specialtyId + "");
 				
 				String fileName = patient.getId().toString() + ".xml";
 				saveToStream(ccd, fileName);
 				
-				int resp = post(ccd, url, parameters, fileName);
+				int responseCode;
+				JSONObject resp = post(ccd, url, parameters, fileName);
 				log.fatal(resp);
+				
+				String token = resp.getString("token");
+				
+				Consult consult = new Consult();
+				consult.setCreator(u);
+				consult.setToken(token);
+				
+				dao.saveConsult(consult);
+				return consult;
 			}
+		}
+		catch (JSONException e) {
+			
 		}
 		catch (MalformedURLException e) {
 			//
 		}
+		
+		return null;
 	}
 	
-	private int post(ContinuityOfCareDocument ccd, URL url, Map<String, String> parameters, String fileName) {
+	private JSONObject post(ContinuityOfCareDocument ccd, URL url, Map<String, String> parameters, String fileName) {
 		BufferedReader rd = null;
 		int responseCode = 0;
+		JSONObject json = null;
 		String response = "";
 		StringBuilder data = new StringBuilder();
 		
 		try {
+			boolean first = true;
 			// Construct data
 			for (Map.Entry<String, String> entry : parameters.entrySet()) {
 				
@@ -189,8 +198,11 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 				if (entry.getKey() == null || entry.getValue() == null) {
 					continue;
 				}
-				data.append("&"); // only append this if its _not_ the first
-				// datum
+				
+				if (first == false) {
+					data.append("&");
+				}
+				first = false;
 				
 				// finally, setup the actual post string
 				data.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
@@ -208,10 +220,10 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 			connection.setDoOutput(true);
 			connection.setDoInput(true);
 			connection.setRequestMethod("POST");
-				connection.setRequestProperty("Content-Type", "application/xml");
-				connection.setRequestProperty("Content-Length", String.valueOf(ms.size()));
-				
-				ms.writeTo(connection.getOutputStream());
+			connection.setRequestProperty("Content-Type", "application/xml");
+			connection.setRequestProperty("Content-Length", String.valueOf(ms.size()));
+			
+			ms.writeTo(connection.getOutputStream());
 			
 			// Get the response
 			rd = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
@@ -219,6 +231,8 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 			while ((line = rd.readLine()) != null) {
 				response = String.format("%s%s%n", response, line);
 			}
+			
+			json = new JSONObject(response);
 			
 			responseCode = connection.getResponseCode();
 		}
@@ -236,7 +250,7 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 			}
 		}
 		
-		return responseCode;
+		return json;
 	}
 	
 	private void saveToStream(ContinuityOfCareDocument ccd, String fileName) {

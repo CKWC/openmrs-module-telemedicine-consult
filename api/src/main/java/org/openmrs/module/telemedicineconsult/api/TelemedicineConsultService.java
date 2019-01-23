@@ -8,7 +8,7 @@ import org.openmrs.annotation.Authorized;
 import org.openmrs.api.APIException;
 import org.openmrs.api.OpenmrsService;
 import org.openmrs.module.telemedicineconsult.TelemedicineConsultConfig;
-import org.openmrs.module.telemedicineconsult.Item;
+import org.openmrs.module.telemedicineconsult.Consult;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -27,21 +27,9 @@ public interface TelemedicineConsultService extends OpenmrsService {
 	 */
 	@Authorized()
 	@Transactional(readOnly = true)
-	Item getItemByUuid(String uuid) throws APIException;
-	
-	/**
-	 * Saves an item. Sets the owner to superuser, if it is not set. It can be called by users with
-	 * this module's privilege. It is executed in a transaction.
-	 * 
-	 * @param item
-	 * @return
-	 * @throws APIException
-	 */
-	@Authorized(TelemedicineConsultConfig.MODULE_PRIVILEGE)
-	@Transactional
-	Item saveItem(Item item) throws APIException;
+	Consult getConsultByUuid(String uuid) throws APIException;
 	
 	@Transactional
-	void remoteReferral(ImplementationId impl, User u, Patient patient, String reason, Integer specialtyId)
+	Consult remoteReferral(ImplementationId impl, User u, Patient patient, String reason, Integer specialtyId)
 	        throws NullArgumentException;
 }

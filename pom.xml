@@ -15,7 +15,19 @@
 	<name>Telemedicine Consult</name>
 	<description>Connect a network of volunteer medical organizations and professionals who donate their time to provide remote telemedicine consults to underserved patients.</description>
 
-	<url>https://wiki.openmrs.org/x/FQ4z</url>
+	<url>https://connectingkidswithcare.org</url>
+
+	<licenses>
+		<license>
+			<name>Mozilla Public License 2.0 with Healthcare Disclaimer</name>
+			<url>http://openmrs.org/license</url>
+		</license>
+	</licenses>
+
+	<organization>
+		<name>Connecting Kids With Care</name>
+		<url>https://connectingkidswithcare.org</url>
+	</organization>
 
 	<scm>
 		<connection>scm:git:git@github.com:openmrs/openmrs-module-telemedicineconsult.git</connection>

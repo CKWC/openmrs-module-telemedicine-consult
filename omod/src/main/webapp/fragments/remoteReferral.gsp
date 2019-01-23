@@ -1,8 +1,7 @@
 <% if (implementationId) { %>
-${ implementationId.implementationId }
-<% } %>
 
-<form id="submit-form" method="post" action="${ ui.actionLink("telemedicineconsult", "remoteReferral", "submit") }">
+<form id="submit-form" method="post" action="${ ui.actionLink("telemedicineconsult", "remoteReferral", "submit",
+            [ successUrl: returnUrl ?: ui.pageLink("coreapps", "patientdashboard/patientDashboard", [ patientId: patient.id ]) ]) }">
     <input type="hidden" name="patientId" value="${ patient.id }" />
 
     <label for="reason">Reason for referral</label>
@@ -76,3 +75,23 @@ ${ implementationId.implementationId }
         <input type="submit" value="Submit">
     </center>
 </form>
+
+<% } else { %>
+
+<div id="error-message" class="note-container">
+    <div class="note warning">
+        <div class="text">
+            <i class="icon-remove medium"></i>
+            
+                <p>Implementation Id must be set before requesting a telemedicine consult.</p>
+            
+        </div>
+        <div class="close-icon"><i class="icon-remove"></i></div>
+    </div>
+</div>
+
+<p align="center">
+    <a href="/${contextPath}/admin/maintenance/implementationid.form">Set Implementation Id</a>
+</p>
+
+<% } %>

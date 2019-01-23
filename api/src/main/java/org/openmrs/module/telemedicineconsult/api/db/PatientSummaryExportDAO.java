@@ -1,4 +1,3 @@
-
 package org.openmrs.module.telemedicineconsult.api.db;
 
 import java.util.List;

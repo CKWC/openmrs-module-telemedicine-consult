@@ -19,6 +19,7 @@ public class RemoteReferralFragmentController {
 	protected final Log log = LogFactory.getLog(getClass());
 	
 	public Redirect get(FragmentModel model, @RequestParam("patientId") Integer patientId,
+	        @RequestParam(value = "returnUrl", required = false) String returnUrl,
 	        @SpringBean("patientService") PatientService service,
 	        @SpringBean("adminService") AdministrationService adminService) {
 		
@@ -30,6 +31,7 @@ public class RemoteReferralFragmentController {
 		
 		ImplementationId impl = adminService.getImplementationId();
 		model.addAttribute("implementationId", impl);
+		model.addAttribute("returnUrl", returnUrl);
 		
 		return null;
 	}

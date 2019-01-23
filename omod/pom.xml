@@ -12,6 +12,18 @@
 	<name>Telemedicine Consult OMOD</name>
 	<description>Omod submodule for Telemedicine Consult</description>
 
+	<licenses>
+		<license>
+			<name>Mozilla Public License 2.0 with Healthcare Disclaimer</name>
+			<url>http://openmrs.org/license</url>
+		</license>
+	</licenses>
+
+	<organization>
+		<name>Connecting Kids With Care</name>
+		<url>https://connectingkidswithcare.org</url>
+	</organization>
+	
 	<dependencies>
         <dependency>
             <groupId>org.openmrs.module</groupId>
