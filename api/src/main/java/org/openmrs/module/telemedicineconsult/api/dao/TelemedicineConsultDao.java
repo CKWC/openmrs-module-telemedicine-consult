@@ -1,5 +1,7 @@
 package org.openmrs.module.telemedicineconsult.api.dao;
 
+import java.util.List;
+
 import org.hibernate.criterion.Restrictions;
 import org.openmrs.api.db.hibernate.DbSession;
 import org.openmrs.api.db.hibernate.DbSessionFactory;
@@ -19,6 +21,11 @@ public class TelemedicineConsultDao {
 	
 	public Consult getConsultByUuid(String uuid) {
 		return (Consult) getSession().createCriteria(Consult.class).add(Restrictions.eq("uuid", uuid)).uniqueResult();
+	}
+	
+	public List<Consult> getOpenConsults() {
+		return (List<Consult>) getSession().createCriteria(Consult.class).add(Restrictions.eqOrIsNull("completed", false))
+		        .list();
 	}
 	
 	public Consult saveConsult(Consult item) {

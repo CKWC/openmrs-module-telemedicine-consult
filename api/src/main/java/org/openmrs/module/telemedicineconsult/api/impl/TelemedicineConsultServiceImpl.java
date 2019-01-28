@@ -113,6 +113,11 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 		return dao.getConsultByUuid(uuid);
 	}
 	
+	@Override
+	public List<Consult> getOpenConsults() throws APIException {
+		return dao.getOpenConsults();
+	}
+	
 	private ContinuityOfCareDocument produceCCD(Patient patient, User u, String reason) {
 		ContinuityOfCareDocument ccd = CCDFactory.eINSTANCE.createContinuityOfCareDocument();
 		
