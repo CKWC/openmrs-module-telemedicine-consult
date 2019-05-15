@@ -24,8 +24,8 @@ public class TelemedicineConsultDao {
 	}
 	
 	public List<Consult> getOpenConsults() {
-		return (List<Consult>) getSession().createCriteria(Consult.class).add(Restrictions.eqOrIsNull("completed", false))
-		        .list();
+		return (List<Consult>) getSession().createCriteria(Consult.class)
+		        .add(Restrictions.or(Restrictions.eq("completed", false), Restrictions.isNull("completed"))).list();
 	}
 	
 	public Consult saveConsult(Consult item) {

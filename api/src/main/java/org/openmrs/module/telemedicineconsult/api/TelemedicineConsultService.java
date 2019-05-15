@@ -9,7 +9,6 @@ import org.openmrs.User;
 import org.openmrs.annotation.Authorized;
 import org.openmrs.api.APIException;
 import org.openmrs.api.OpenmrsService;
-import org.openmrs.module.telemedicineconsult.TelemedicineConsultConfig;
 import org.openmrs.module.telemedicineconsult.Consult;
 import org.springframework.transaction.annotation.Transactional;
 

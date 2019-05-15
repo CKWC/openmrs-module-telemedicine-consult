@@ -278,13 +278,19 @@ public class ExportCcdUtils {
 		return builder;
 	}
 	
+	public String htmlString(String value) {
+		return value.replaceAll("\n", "<br />");
+	}
+	
 	public String buildSectionContent(String... elements) {
 		StringBuilder builder = new StringBuilder();
 		
 		builder.append("<tr>");
 		
 		for (String element : elements) {
-			builder.append("<td>").append(element).append("</td>");
+			String htmlValue = htmlString(element);
+			
+			builder.append("<td>").append(htmlValue).append("</td>");
 		}
 		
 		builder.append("</tr>");

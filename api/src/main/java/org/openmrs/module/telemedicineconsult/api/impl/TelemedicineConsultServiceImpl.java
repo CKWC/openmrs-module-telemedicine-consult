@@ -13,6 +13,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,21 +23,29 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.openhealthtools.mdht.uml.cda.ccd.CCDFactory;
-import org.openhealthtools.mdht.uml.cda.ccd.ContinuityOfCareDocument;
+import org.openhealthtools.mdht.uml.cda.consol.ConsolFactory;
+import org.openhealthtools.mdht.uml.cda.consol.ContinuityOfCareDocument;
 import org.openhealthtools.mdht.uml.cda.util.CDAUtil;
+import org.openmrs.Concept;
+import org.openmrs.Encounter;
+import org.openmrs.EncounterType;
 import org.openmrs.ImplementationId;
+import org.openmrs.Obs;
 import org.openmrs.Patient;
 import org.openmrs.PatientIdentifier;
 import org.openmrs.PatientIdentifierType;
 import org.openmrs.User;
+import org.openmrs.Visit;
 import org.openmrs.api.APIException;
 import org.openmrs.api.AdministrationService;
+import org.openmrs.api.EncounterService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.UserService;
+import org.openmrs.api.VisitService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.impl.BaseOpenmrsService;
 import org.openmrs.module.telemedicineconsult.api.generators.AllergySectionGenerator;
+import org.openmrs.module.telemedicineconsult.api.generators.EncounterSectionsGenerator;
 import org.openmrs.module.telemedicineconsult.api.generators.FamilyHistorySectionGenerator;
 import org.openmrs.module.telemedicineconsult.api.generators.HeaderGenerator;
 import org.openmrs.module.telemedicineconsult.api.generators.ImmunizationsSectionGenerator;
@@ -90,22 +99,16 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 	private ReasonForRefferalSectionGenerator reasonForRefferalSectionGenerator;
 	
 	@Autowired
-	private HeaderGenerator headerGenerator;
+	private EncounterSectionsGenerator encounterSectionsGenerator;
 	
-	UserService userService;
+	@Autowired
+	private HeaderGenerator headerGenerator;
 	
 	/**
 	 * Injected in moduleApplicationContext.xml
 	 */
 	public void setDao(TelemedicineConsultDao dao) {
 		this.dao = dao;
-	}
-	
-	/**
-	 * Injected in moduleApplicationContext.xml
-	 */
-	public void setUserService(UserService userService) {
-		this.userService = userService;
 	}
 	
 	@Override
@@ -118,15 +121,17 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 		return dao.getOpenConsults();
 	}
 	
-	private ContinuityOfCareDocument produceCCD(Patient patient, User u, String reason) {
-		ContinuityOfCareDocument ccd = CCDFactory.eINSTANCE.createContinuityOfCareDocument();
+	private ContinuityOfCareDocument produceCCD(ImplementationId impl, Patient patient, User u, String reason) {
+		ContinuityOfCareDocument ccd = ConsolFactory.eINSTANCE.createContinuityOfCareDocument();
 		
-		ccd = headerGenerator.buildHeader(ccd, patient, u);
+		ccd = headerGenerator.buildHeader(ccd, impl, patient, u); // includes Encounter
+		ccd = encounterSectionsGenerator.buildClinicalNotes(ccd, patient);
+		ccd = encounterSectionsGenerator.buildAssessments(ccd, patient);
 		ccd = allergySectionGenerator.buildAllergies(ccd, patient);
 		ccd = problemsSectionGenerator.buildProblems(ccd, patient);
 		ccd = medicationSectionGenerator.buildMedication(ccd, patient);
 		ccd = vitalSignsSectionGenerator.buildVitalSigns(ccd, patient);
-		ccd = socialHistorySectionGenerator.buildSocialHistory(ccd, patient);
+		// ccd = socialHistorySectionGenerator.buildSocialHistory(ccd, patient);
 		ccd = reasonForRefferalSectionGenerator.buildReasonForRefferal(ccd, patient, reason);
 		ccd = immunizationsSectionGenerator.buildImmunizations(ccd, patient);
 		ccd = labResultsSectionGenerator.buildLabResults(ccd, patient);
@@ -147,7 +152,38 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 			throw new NullArgumentException("patient");
 		
 		try {
-			ContinuityOfCareDocument ccd = produceCCD(patient, u, reason);
+			VisitService visitService = Context.getVisitService();
+			EncounterService encounterService = Context.getEncounterService();
+			
+			List<Visit> activeVisits = visitService.getActiveVisitsByPatient(patient);
+			EncounterType encounterType = encounterService.getEncounterType("Telemedicine Request");
+			
+			Integer visitId = null;
+			if (!activeVisits.isEmpty() && encounterType != null) {
+				Visit visit = activeVisits.get(0);
+				visitId = visit.getId();
+				
+				Date now = new Date();
+				Encounter e = new Encounter();
+				e.setPatient(patient);
+				e.setDateCreated(now);
+				e.setEncounterDatetime(now);
+				e.setLocation(visit.getLocation());
+				e.setEncounterType(encounterType);
+				
+				Concept refferalReasonConcept = Context.getConceptService().getConceptByMapping("164359", "CIEL");
+				if (refferalReasonConcept != null && reason != null) {
+					Obs obs = new Obs(patient, refferalReasonConcept, now, e.getLocation());
+					obs.setValueText(reason);
+					obs.setDateCreated(now);
+					e.addObs(obs);
+				}
+				visit.addEncounter(e);
+				
+				encounterService.saveEncounter(e);
+			}
+			
+			ContinuityOfCareDocument ccd = produceCCD(impl, patient, u, reason);
 			if (ccd != null) {
 				URL url = new URL("https://staging.connectingkidswithcare.org/api/emr/consult");
 				Map<String, String> parameters = new HashMap<String, String>();
@@ -164,7 +200,7 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 				saveToStream(ccd, fileName);
 				
 				int responseCode;
-				JSONObject resp = post(ccd, url, parameters, fileName);
+				JSONObject resp = post(ccd, url, parameters);
 				log.fatal(resp);
 				
 				String token = resp.getString("token");
@@ -172,6 +208,7 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 				Consult consult = new Consult();
 				consult.setCreator(u);
 				consult.setToken(token);
+				consult.setVisitId(visitId);
 				
 				dao.saveConsult(consult);
 				return consult;
@@ -187,7 +224,7 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 		return null;
 	}
 	
-	private JSONObject post(ContinuityOfCareDocument ccd, URL url, Map<String, String> parameters, String fileName) {
+	private JSONObject post(ContinuityOfCareDocument ccd, URL url, Map<String, String> parameters) {
 		BufferedReader rd = null;
 		int responseCode = 0;
 		JSONObject json = null;

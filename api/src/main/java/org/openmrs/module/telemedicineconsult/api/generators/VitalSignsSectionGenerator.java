@@ -2,9 +2,9 @@ package org.openmrs.module.telemedicineconsult.api.generators;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openhealthtools.mdht.uml.cda.ccd.CCDFactory;
-import org.openhealthtools.mdht.uml.cda.ccd.ContinuityOfCareDocument;
-import org.openhealthtools.mdht.uml.cda.ccd.VitalSignsSection;
+import org.openhealthtools.mdht.uml.cda.consol.ConsolFactory;
+import org.openhealthtools.mdht.uml.cda.consol.ContinuityOfCareDocument;
+import org.openhealthtools.mdht.uml.cda.consol.VitalSignsSection;
 import org.openhealthtools.mdht.uml.cda.operations.SectionOperations;
 import org.openmrs.Concept;
 import org.openmrs.ConceptNumeric;
@@ -90,7 +90,7 @@ public class VitalSignsSectionGenerator {
 	public ContinuityOfCareDocument buildVitalSigns(ContinuityOfCareDocument ccd, Patient patient) {
 		loadConcepts();
 		
-		VitalSignsSection section = CCDFactory.eINSTANCE.createVitalSignsSection();
+		VitalSignsSection section = ConsolFactory.eINSTANCE.createVitalSignsSection();
 		
 		section.getTemplateIds().add(utils.buildTemplateID("2.16.840.1.113883.10.20.22.2.4"));
 		section.setCode(utils.buildCodeCE("8716-3", "2.16.840.1.113883.6.1", "VITAL SIGNS", "LOINC"));

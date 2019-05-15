@@ -1,11 +1,8 @@
 package org.openmrs.module.telemedicineconsult.api.generators;
 
-import org.openhealthtools.mdht.uml.cda.CDAFactory;
-import org.openhealthtools.mdht.uml.cda.StrucDocText;
-import org.openhealthtools.mdht.uml.cda.ccd.CCDFactory;
-import org.openhealthtools.mdht.uml.cda.ccd.ContinuityOfCareDocument;
-import org.openhealthtools.mdht.uml.cda.ccd.SocialHistorySection;
-import org.openhealthtools.mdht.uml.cda.operations.SectionOperations;
+import org.openhealthtools.mdht.uml.cda.consol.ConsolFactory;
+import org.openhealthtools.mdht.uml.cda.consol.ContinuityOfCareDocument;
+import org.openhealthtools.mdht.uml.cda.consol.SocialHistorySection;
 import org.openmrs.Concept;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
@@ -41,7 +38,7 @@ public class SocialHistorySectionGenerator {
 	private PatientSummaryExportDAO dao;
 	
 	public ContinuityOfCareDocument buildSocialHistory(ContinuityOfCareDocument ccd, Patient patient) {
-		SocialHistorySection section = CCDFactory.eINSTANCE.createSocialHistorySection();
+		SocialHistorySection section = ConsolFactory.eINSTANCE.createSocialHistorySection();
 		section.getTemplateIds().add(utils.buildTemplateID("2.16.840.1.113883.10.20.22.2.17"));
 		section.setCode(utils.buildCodeCE("29762-2", "2.16.840.1.113883.6.1", "Social History", "LOINC"));
 		section.setTitle(utils.buildST("SOCIAL HISTORY"));

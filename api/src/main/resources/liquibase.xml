@@ -23,6 +23,7 @@
 			<column name="token" type="varchar(1024)" >
 				<constraints nullable="false" ></constraints>
 			</column>
+			<column name="visit_id" type="int" />
 			<column name="creator" type="int" />
 			<column name="date_created" type="datetime">
 				<constraints nullable="false" />
@@ -36,6 +37,9 @@
 			<column name="date_changed" type="datetime" />
 			<column name="date_voided" type="datetime" />
 		</createTable>
+        <addForeignKeyConstraint constraintName="telemedicineconsult_consult_visit_fk" 
+			baseTableName="telemedicineconsult_consult" baseColumnNames="visit_id"  
+			referencedTableName="visit" referencedColumnNames="visit_id" />
         <addForeignKeyConstraint constraintName="telemedicineconsult_consult_creator_fk" 
 			baseTableName="telemedicineconsult_consult" baseColumnNames="creator"  
 			referencedTableName="users" referencedColumnNames="user_id" />

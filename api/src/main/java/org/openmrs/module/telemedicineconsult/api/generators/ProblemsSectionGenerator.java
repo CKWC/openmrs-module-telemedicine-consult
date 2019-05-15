@@ -2,9 +2,9 @@ package org.openmrs.module.telemedicineconsult.api.generators;
 
 import org.openhealthtools.mdht.uml.cda.CDAFactory;
 import org.openhealthtools.mdht.uml.cda.StrucDocText;
-import org.openhealthtools.mdht.uml.cda.ccd.CCDFactory;
-import org.openhealthtools.mdht.uml.cda.ccd.ContinuityOfCareDocument;
-import org.openhealthtools.mdht.uml.cda.ccd.ProblemSection;
+import org.openhealthtools.mdht.uml.cda.consol.ConsolFactory;
+import org.openhealthtools.mdht.uml.cda.consol.ContinuityOfCareDocument;
+import org.openhealthtools.mdht.uml.cda.consol.ProblemSection;
 import org.openhealthtools.mdht.uml.cda.operations.SectionOperations;
 import org.openhealthtools.mdht.uml.hl7.datatypes.CE;
 import org.openhealthtools.mdht.uml.hl7.datatypes.DatatypesFactory;
@@ -38,7 +38,7 @@ public class ProblemsSectionGenerator {
 	private ExportCcdUtils utils;
 	
 	public ContinuityOfCareDocument buildProblems(ContinuityOfCareDocument ccd, Patient patient) {
-		ProblemSection problemSection = CCDFactory.eINSTANCE.createProblemSection();
+		ProblemSection problemSection = ConsolFactory.eINSTANCE.createProblemSection();
 		
 		problemSection.getTemplateIds().add(utils.buildTemplateID("2.16.840.1.113883.10.20.22.2.5.1"));
 		problemSection.setCode(utils.buildCodeCE("11450-4", "2.16.840.1.113883.6.1", "PROBLEM LIST", "LOINC"));

@@ -9,9 +9,9 @@ import org.openhealthtools.mdht.uml.cda.Participant2;
 import org.openhealthtools.mdht.uml.cda.ParticipantRole;
 import org.openhealthtools.mdht.uml.cda.PlayingEntity;
 import org.openhealthtools.mdht.uml.cda.StrucDocText;
-import org.openhealthtools.mdht.uml.cda.ccd.AlertsSection;
-import org.openhealthtools.mdht.uml.cda.ccd.CCDFactory;
-import org.openhealthtools.mdht.uml.cda.ccd.ContinuityOfCareDocument;
+import org.openhealthtools.mdht.uml.cda.consol.AllergiesSection;
+import org.openhealthtools.mdht.uml.cda.consol.ConsolFactory;
+import org.openhealthtools.mdht.uml.cda.consol.ContinuityOfCareDocument;
 import org.openhealthtools.mdht.uml.cda.operations.SectionOperations;
 import org.openhealthtools.mdht.uml.hl7.datatypes.CD;
 import org.openhealthtools.mdht.uml.hl7.datatypes.CE;
@@ -52,7 +52,7 @@ public class AllergySectionGenerator {
 	private ExportCcdUtils utils;
 	
 	public ContinuityOfCareDocument buildAllergies(ContinuityOfCareDocument ccd, Patient patient) {
-		AlertsSection allergySection = CCDFactory.eINSTANCE.createAlertsSection();
+		AllergiesSection allergySection = ConsolFactory.eINSTANCE.createAllergiesSection();
 		allergySection.getTemplateIds().add(
 		    utils.buildTemplateID("2.16.840.1.113883.3.88.11.83.102", (String) null, "HITSP/C83"));
 		II allergySectionTemplateID1 = DatatypesFactory.eINSTANCE.createII();

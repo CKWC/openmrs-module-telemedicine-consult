@@ -23,9 +23,9 @@ import org.openhealthtools.mdht.uml.cda.PatientRole;
 import org.openhealthtools.mdht.uml.cda.Performer2;
 import org.openhealthtools.mdht.uml.cda.PlayingEntity;
 import org.openhealthtools.mdht.uml.cda.StrucDocText;
-import org.openhealthtools.mdht.uml.cda.ccd.CCDFactory;
-import org.openhealthtools.mdht.uml.cda.ccd.ContinuityOfCareDocument;
-import org.openhealthtools.mdht.uml.cda.ccd.EncountersSection;
+import org.openhealthtools.mdht.uml.cda.consol.ConsolFactory;
+import org.openhealthtools.mdht.uml.cda.consol.ContinuityOfCareDocument;
+import org.openhealthtools.mdht.uml.cda.consol.EncountersSection;
 import org.openhealthtools.mdht.uml.cda.operations.SectionOperations;
 import org.openhealthtools.mdht.uml.hl7.datatypes.AD;
 import org.openhealthtools.mdht.uml.hl7.datatypes.CD;
@@ -53,6 +53,7 @@ import org.openmrs.Concept;
 import org.openmrs.ConceptMap;
 import org.openmrs.Encounter;
 import org.openmrs.EncounterRole;
+import org.openmrs.ImplementationId;
 import org.openmrs.Patient;
 import org.openmrs.Person;
 import org.openmrs.PersonAddress;
@@ -60,6 +61,7 @@ import org.openmrs.PersonAttribute;
 import org.openmrs.Provider;
 import org.openmrs.Relationship;
 import org.openmrs.User;
+import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.telemedicineconsult.api.utils.ExportCcdUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,7 +82,7 @@ public class HeaderGenerator {
 	@Autowired
 	private ExportCcdUtils utils;
 	
-	public ContinuityOfCareDocument buildHeader(ContinuityOfCareDocument ccd, Patient patient, User u) {
+	public ContinuityOfCareDocument buildHeader(ContinuityOfCareDocument ccd, ImplementationId impl, Patient patient, User u) {
 		
 		Date d = new Date();
 		ccd.setEffectiveTime(utils.buildEffectiveTime(d));
@@ -110,6 +112,8 @@ public class HeaderGenerator {
 		ccd.setConfidentialityCode(confidentialityCode);
 		
 		PatientRole patientRole = CDAFactory.eINSTANCE.createPatientRole();
+		patientRole.getIds().add(utils.buildID(impl.getImplementationId(), patient.getPatientIdentifier().getIdentifier()));
+		
 		Set<PersonAddress> addresses = patient.getAddresses();
 		
 		for (PersonAddress address : addresses) {
@@ -172,18 +176,22 @@ public class HeaderGenerator {
 		String dob = s1.format(dobs);
 		dateOfBirth.setValue(dob);
 		cdapatient.setBirthTime(dateOfBirth);
+		
 		Organization providerOrganization = CDAFactory.eINSTANCE.createOrganization();
 		AD providerOrganizationAddress = DatatypesFactory.eINSTANCE.createAD();
-		providerOrganizationAddress.addCounty("");
-		providerOrganizationAddress.addState("");
+		providerOrganizationAddress.addCounty(" ");
 		providerOrganization.getAddrs().add(providerOrganizationAddress);
 		ON organizationName = DatatypesFactory.eINSTANCE.createON();
+		organizationName.addText(impl.getName());
 		providerOrganization.getNames().add(organizationName);
+		
 		TEL providerOrganizationTelecon = DatatypesFactory.eINSTANCE.createTEL();
 		providerOrganizationTelecon.setNullFlavor(NullFlavor.UNK);
 		providerOrganization.getTelecoms().add(providerOrganizationTelecon);
 		patientRole.setProviderOrganization(providerOrganization);
+		
 		ccd.addPatientRole(patientRole);
+		
 		Author author = CDAFactory.eINSTANCE.createAuthor();
 		author.getTemplateIds().add(utils.buildTemplateID("2.16.840.1.113883.10.20.22.4.119", null, null));
 		author.setTime(utils.buildEffectiveTime(d));
@@ -196,8 +204,7 @@ public class HeaderGenerator {
 		
 		Organization representedOrganization = CDAFactory.eINSTANCE.createOrganization();
 		AD representedOrganizationAddress = DatatypesFactory.eINSTANCE.createAD();
-		representedOrganizationAddress.addCounty("");
-		representedOrganizationAddress.addState("");
+		representedOrganizationAddress.addCounty(" ");
 		ON implName = DatatypesFactory.eINSTANCE.createON();
 		representedOrganization.getNames().add(implName);
 		assignedAuthor.getAddrs().add(representedOrganizationAddress);
@@ -216,6 +223,7 @@ public class HeaderGenerator {
 		author.setAssignedAuthor(assignedAuthor);
 		ccd.getAuthors().add(author);
 		ccd = this.buildEncounters(ccd, patient);
+		
 		List<Relationship> relationShips = Context.getPersonService().getRelationshipsByPerson(patient);
 		List<Participant1> participantList = new ArrayList(relationShips.size());
 		
@@ -328,7 +336,7 @@ public class HeaderGenerator {
 	}
 	
 	private ContinuityOfCareDocument buildEncounters(ContinuityOfCareDocument ccd, Patient patient) {
-		EncountersSection encounterSection = CCDFactory.eINSTANCE.createEncountersSection();
+		EncountersSection encounterSection = ConsolFactory.eINSTANCE.createEncountersSection();
 		ST encounterSectionTitle = DatatypesFactory.eINSTANCE.createST();
 		encounterSectionTitle.addText("ENCOUNTERS");
 		encounterSection.setTitle(encounterSectionTitle);
@@ -341,19 +349,19 @@ public class HeaderGenerator {
 		buffer.append("</tr>");
 		buffer.append("</thead>");
 		buffer.append("<tbody>");
-		List<Encounter> encounterList = Context.getEncounterService().getEncountersByPatient(patient);
+		List<Visit> encounterList = Context.getVisitService().getVisitsByPatient(patient);
 		int i = 0;
 		
 		for (Iterator i$ = encounterList.iterator(); i$.hasNext(); ++i) {
-			Encounter encounter = (Encounter) i$.next();
+			Visit encounter = (Visit) i$.next();
 			
-			Date date = encounter.getEncounterDatetime();
+			Date date = encounter.getStartDatetime();
 			Date dateSixMonthsAgo = new DateTime().minusMonths(6).toDate();
 			
 			if (date.after(dateSixMonthsAgo)) {
 				buffer.append("<tr>");
 				buffer.append("<td>" + utils.format(date) + "</td>");
-				buffer.append("<td><content id=\"encounterType" + i + " \">" + encounter.getEncounterType().getName()
+				buffer.append("<td><content id=\"visitType" + i + " \">" + encounter.getVisitType().getName()
 				        + "</content></td>");
 				buffer.append("</tr>");
 			}

@@ -32,6 +32,10 @@ public class Consult extends BaseOpenmrsData {
 	@Column(name = "completed")
 	private Boolean completed;
 	
+	@Basic
+	@Column(name = "visit_id")
+	private Integer visitId;
+	
 	@Override
 	public Integer getId() {
 		return id;
@@ -66,5 +70,13 @@ public class Consult extends BaseOpenmrsData {
 	
 	public void setCompleted(boolean completed) {
 		this.completed = completed;
+	}
+	
+	public Integer getVisitId() {
+		return visitId;
+	}
+	
+	public void setVisitId(Integer visitId) {
+		this.visitId = visitId;
 	}
 }

@@ -27,6 +27,13 @@
 
 	<properties>
 		<openMRSVersion>2.0.0</openMRSVersion>
+		<dataexchangeVersion>1.3.2</dataexchangeVersion>
+		<appframeworkVersion>2.9</appframeworkVersion>
+		<uiframeworkVersion>3.9</uiframeworkVersion>
+		<appuiVersion>1.7</appuiVersion>
+		<uicommonsModuleVersion>2.1</uicommonsModuleVersion>
+		<emrapiVersion>1.27.0</emrapiVersion>
+
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
@@ -48,6 +55,20 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>org.openmrs.module</groupId>
+			<artifactId>dataexchange-api</artifactId>
+			<version>${dataexchangeVersion}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openmrs.module</groupId>
+			<artifactId>emrapi-api</artifactId>
+			<version>${emrapiVersion}</version>
+			<scope>provided</scope>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.openmrs.api</groupId>
 			<artifactId>openmrs-api</artifactId>
@@ -79,79 +100,21 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.eclipse.emf.ecore</groupId>
-			<artifactId>xmi</artifactId>
-			<version>2.5.0.v200906151043</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.emf</groupId>
-			<artifactId>ecore</artifactId>
-			<version>2.5.0.v200906151043</version>
+			<groupId>org.eclipse.birt.runtime</groupId>
+			<artifactId>org.eclipse.emf.ecore</artifactId>
+			<version>2.8.0.v20120606-0717</version>
 		</dependency>
 
-		<dependency>
-			<groupId>org.eclipse</groupId>
-			<artifactId>ocl</artifactId>
-			<version>1.3.0.v200905271400</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.emf</groupId>
-			<artifactId>common</artifactId>
-			<version>2.5.0.v200906151043</version>
+		<dependency>    
+			<groupId>org.openehealth.ipf.oht.mdht</groupId>
+			<artifactId>ipf-oht-mdht-uml-cda-consol</artifactId>
+			<version>1.2.0.201212201425</version>
 		</dependency>
 
-		<dependency>
-			<groupId>org.eclipse.ocl</groupId>
-			<artifactId>ecore</artifactId>
-			<version>1.3.0.v200905271400</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.openhealthtools.mdht.uml.cda</groupId>
-			<artifactId>ccd</artifactId>
-			<version>1.0.0.201109121753</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.openhealthtools.mdht.uml.cda</groupId>
-			<artifactId>cdt</artifactId>
-			<version>1.0.0.201109121753</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.openhealthtools.mdht.uml.cda</groupId>
-			<artifactId>hitsp</artifactId>
-			<version>1.0.0.201109121753</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.openhealthtools.mdht.uml.cda</groupId>
-			<artifactId>ihe</artifactId>
-			<version>1.0.0.201109121753</version>
-		</dependency>
-
-
-		<dependency>
-			<groupId>org.openhealthtools.mdht.uml</groupId>
-			<artifactId>cda</artifactId>
-			<version>1.0.0.201109121753</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.openhealthtools.mdht.uml.hl7</groupId>
-			<artifactId>datatypes</artifactId>
-			<version>1.0.0.201109121753</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.openhealthtools.mdht.uml.hl7</groupId>
-			<artifactId>rim</artifactId>
-			<version>1.0.0.201109121753</version>
-		</dependency>
-		<dependency>
-			<groupId>org.openhealthtools.mdht.uml.hl7</groupId>
-			<artifactId>vocab</artifactId>
-			<version>1.0.0.201109121753</version>
+		<dependency>    
+			<groupId>org.openehealth.ipf.oht.mdht</groupId>
+			<artifactId>ipf-oht-mdht-uml-hl7-datatypes</artifactId>
+			<version>1.2.0.201212201425</version>
 		</dependency>
 
 		<dependency>

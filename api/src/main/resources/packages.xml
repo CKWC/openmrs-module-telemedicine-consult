@@ -1,0 +1,10 @@
+<org.openmrs.module.emrapi.metadata.MetadataPackagesConfig>
+  <packages>
+    <org.openmrs.module.emrapi.metadata.MetadataPackageConfig>
+      <filenameBase>Telemedicine_Consult_Encounter_Types</filenameBase>
+      <groupUuid>0aa69653-e9d7-4f6d-9056-eeff2233a699</groupUuid>
+      <version>1</version>
+      <importMode>MIRROR</importMode>
+    </org.openmrs.module.emrapi.metadata.MetadataPackageConfig>
+  </packages>
+</org.openmrs.module.emrapi.metadata.MetadataPackagesConfig>
