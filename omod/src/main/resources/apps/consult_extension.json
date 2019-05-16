@@ -1,10 +1,10 @@
 [
     {
         "id": "telemedicineconsult.dashboard.consult",
-        "extensionPointId": "patientDashboard.overallActions",
+        "extensionPointId": "patientDashboard.visitActions",
         "type": "link",
         "label": "Telemedicine Consult",
-        "url": "telemedicineconsult/telemedicineconsult.page?patientId={{patient.patientId}}",
+        "url": "telemedicineconsult/telemedicineconsult.page?patientId={{patient.uuid}}&visitId={{visit.uuid}}",
         "icon": "icon-user-md",
         "order": 20
     }

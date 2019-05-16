@@ -6,6 +6,7 @@ import org.hibernate.criterion.Restrictions;
 import org.openmrs.api.db.hibernate.DbSession;
 import org.openmrs.api.db.hibernate.DbSessionFactory;
 import org.openmrs.module.telemedicineconsult.Consult;
+import org.openmrs.module.telemedicineconsult.ConsultNote;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -24,11 +25,20 @@ public class TelemedicineConsultDao {
 	}
 	
 	public List<Consult> getOpenConsults() {
-		return (List<Consult>) getSession().createCriteria(Consult.class)
-		        .add(Restrictions.or(Restrictions.eq("completed", false), Restrictions.isNull("completed"))).list();
+		return (List<Consult>) getSession().createCriteria(Consult.class).add(Restrictions.eq("completed", false)).list();
+	}
+	
+	public ConsultNote getConsultNoteByExternalId(Integer externalId) {
+		return (ConsultNote) getSession().createCriteria(ConsultNote.class)
+		        .add(Restrictions.eq("externalConsultId", externalId)).uniqueResult();
 	}
 	
 	public Consult saveConsult(Consult item) {
+		getSession().saveOrUpdate(item);
+		return item;
+	}
+	
+	public ConsultNote saveConsultNote(ConsultNote item) {
 		getSession().saveOrUpdate(item);
 		return item;
 	}

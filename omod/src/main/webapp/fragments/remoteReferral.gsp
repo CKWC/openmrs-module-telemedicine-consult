@@ -1,8 +1,9 @@
 <% if (implementationId) { %>
 
 <form id="submit-form" method="post" action="${ ui.actionLink("telemedicineconsult", "remoteReferral", "submit",
-            [ successUrl: returnUrl ?: ui.pageLink("coreapps", "patientdashboard/patientDashboard", [ patientId: patient.id ]) ]) }">
-    <input type="hidden" name="patientId" value="${ patient.id }" />
+            [ successUrl: returnUrl ?: ui.pageLink("coreapps", "patientdashboard/patientDashboard", [ patientId: param.patientId, visitId: param.visitId ]) ]) }">
+    <input type="hidden" name="visitId" value="${ param.visitId.flatten().first() }" />
+    <input type="hidden" name="patientId" value="${ param.patientId.flatten().first() }" />
 
     <label for="reason">Reason for referral</label>
     <textarea placeholder="Reason for referral..." name="reason" rows="4" cols="50"></textarea>

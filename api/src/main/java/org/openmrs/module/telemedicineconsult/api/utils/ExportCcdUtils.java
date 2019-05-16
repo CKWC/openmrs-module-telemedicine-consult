@@ -342,8 +342,6 @@ public class ExportCcdUtils {
 		}
 		catch (Exception e) {
 			log.fatal(e);
-			log.fatal(e);
-			log.fatal(e);
 			log.error(xmlString);
 		}
 		return text;

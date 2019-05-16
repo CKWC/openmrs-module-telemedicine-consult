@@ -103,7 +103,6 @@ public class VitalSignsSectionGenerator {
 		builder.append(buildConclusionSection(patient));
 		
 		builder.append(buildProblemListSection(patient));
-		log.error(builder.toString());
 		
 		utils.createStrucDocText(section, builder.toString());
 		ccd.addSection(section);

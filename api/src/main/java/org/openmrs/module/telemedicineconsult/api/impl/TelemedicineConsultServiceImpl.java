@@ -18,9 +18,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.text.AbstractDocument.Content;
+
 import org.apache.commons.lang.NullArgumentException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.joda.time.DateTime;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.openhealthtools.mdht.uml.cda.consol.ConsolFactory;
@@ -39,6 +42,7 @@ import org.openmrs.Visit;
 import org.openmrs.api.APIException;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.EncounterService;
+import org.openmrs.api.ObsService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.UserService;
 import org.openmrs.api.VisitService;
@@ -59,6 +63,7 @@ import org.openmrs.module.telemedicineconsult.api.generators.VitalSignsSectionGe
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.openmrs.module.telemedicineconsult.Consult;
+import org.openmrs.module.telemedicineconsult.ConsultNote;
 import org.openmrs.module.telemedicineconsult.api.TelemedicineConsultService;
 import org.openmrs.module.telemedicineconsult.api.dao.TelemedicineConsultDao;
 
@@ -141,47 +146,43 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 		return ccd;
 	}
 	
-	public Consult remoteReferral(ImplementationId impl, User u, Patient patient, String reason, Integer specialtyId)
+	public Consult remoteReferral(ImplementationId impl, User u, Visit visit, String reason, Integer specialtyId)
 	        throws NullArgumentException {
 		
 		if (impl == null)
 			throw new NullArgumentException("impl");
 		if (u == null)
 			throw new NullArgumentException("u");
-		if (patient == null)
-			throw new NullArgumentException("patient");
+		if (visit == null)
+			throw new NullArgumentException("visit");
+		
+		EncounterService encounterService = Context.getEncounterService();
+		EncounterType encounterType = encounterService.getEncounterType("Telemedicine Request");
+		
+		if (encounterType == null)
+			throw new NullArgumentException("encounterType");
 		
 		try {
-			VisitService visitService = Context.getVisitService();
-			EncounterService encounterService = Context.getEncounterService();
+			Patient patient = visit.getPatient();
 			
-			List<Visit> activeVisits = visitService.getActiveVisitsByPatient(patient);
-			EncounterType encounterType = encounterService.getEncounterType("Telemedicine Request");
+			Date now = new Date();
+			Encounter e = new Encounter();
+			e.setPatient(patient);
+			e.setDateCreated(now);
+			e.setEncounterDatetime(now);
+			e.setLocation(visit.getLocation());
+			e.setEncounterType(encounterType);
 			
-			Integer visitId = null;
-			if (!activeVisits.isEmpty() && encounterType != null) {
-				Visit visit = activeVisits.get(0);
-				visitId = visit.getId();
-				
-				Date now = new Date();
-				Encounter e = new Encounter();
-				e.setPatient(patient);
-				e.setDateCreated(now);
-				e.setEncounterDatetime(now);
-				e.setLocation(visit.getLocation());
-				e.setEncounterType(encounterType);
-				
-				Concept refferalReasonConcept = Context.getConceptService().getConceptByMapping("164359", "CIEL");
-				if (refferalReasonConcept != null && reason != null) {
-					Obs obs = new Obs(patient, refferalReasonConcept, now, e.getLocation());
-					obs.setValueText(reason);
-					obs.setDateCreated(now);
-					e.addObs(obs);
-				}
-				visit.addEncounter(e);
-				
-				encounterService.saveEncounter(e);
+			Concept refferalReasonConcept = Context.getConceptService().getConceptByMapping("164359", "CIEL");
+			if (refferalReasonConcept != null && reason != null) {
+				Obs obs = new Obs(patient, refferalReasonConcept, now, e.getLocation());
+				obs.setValueText(reason);
+				obs.setDateCreated(now);
+				e.addObs(obs);
 			}
+			visit.addEncounter(e);
+			
+			encounterService.saveEncounter(e);
 			
 			ContinuityOfCareDocument ccd = produceCCD(impl, patient, u, reason);
 			if (ccd != null) {
@@ -201,14 +202,15 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 				
 				int responseCode;
 				JSONObject resp = post(ccd, url, parameters);
-				log.fatal(resp);
+				log.info(resp);
 				
 				String token = resp.getString("token");
 				
 				Consult consult = new Consult();
 				consult.setCreator(u);
 				consult.setToken(token);
-				consult.setVisitId(visitId);
+				consult.setCompleted(false);
+				consult.setVisitId(visit.getId());
 				
 				dao.saveConsult(consult);
 				return consult;
@@ -222,6 +224,66 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 		}
 		
 		return null;
+	}
+	
+	public void saveConsultForVisit(Consult consultRequest, int consultId, Visit visit, EncounterType encounterType,
+	        Concept noteConcept, String consultText) throws NullArgumentException {
+		if (visit == null)
+			throw new NullArgumentException("visit");
+		if (encounterType == null)
+			throw new NullArgumentException("encounterType");
+		if (noteConcept == null)
+			throw new NullArgumentException("noteConcept");
+		if (consultText == null)
+			throw new NullArgumentException("consultText");
+		
+		Obs ob = null;
+		ConsultNote note = dao.getConsultNoteByExternalId(consultId);
+		if (note != null) {
+			
+			// update note if needed
+			ObsService obsService = Context.getObsService();
+			ob = obsService.getObs(note.getObsId());
+			
+			if (!ob.getValueText().equals(consultText)) {
+				ob.setValueText(consultText);
+				obsService.saveObs(ob, "consultation changed by consulting provider");
+			}
+			
+		} else {
+			
+			EncounterService encounterService = Context.getEncounterService();
+			
+			Date now = new Date();
+			Encounter e = new Encounter();
+			e.setPatient(visit.getPatient());
+			e.setDateCreated(now);
+			e.setEncounterDatetime(now);
+			e.setLocation(visit.getLocation());
+			e.setEncounterType(encounterType);
+			
+			ob = new Obs(e.getPatient(), noteConcept, now, e.getLocation());
+			ob.setValueText(consultText);
+			ob.setDateCreated(now);
+			e.addObs(ob);
+			
+			visit.addEncounter(e);
+			
+			e = encounterService.saveEncounter(e);
+			Context.flushSession();
+			
+			note = new ConsultNote();
+			note.setObsId(ob.getObsId());
+			note.setExternalConsultId(consultId);
+			dao.saveConsultNote(note);
+		}
+		
+		// we keep checking for updates for two weeks, after that, we consider the consult complete
+		Date twoWeeksAgo = new DateTime().minusWeeks(2).toDate();
+		if (ob.getDateCreated().before(twoWeeksAgo)) {
+			consultRequest.setCompleted(true);
+			dao.saveConsult(consultRequest);
+		}
 	}
 	
 	private JSONObject post(ContinuityOfCareDocument ccd, URL url, Map<String, String> parameters) {

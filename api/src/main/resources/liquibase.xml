@@ -19,11 +19,15 @@
 			<column name="uuid" type="char(38)">
 				<constraints nullable="false" unique="true"></constraints>
 			</column>
-            <column name="completed" type="boolean" defaultValueBoolean="false"/>
+            <column name="completed" type="boolean" defaultValueBoolean="false">
+				<constraints nullable="false" />
+			</column>
 			<column name="token" type="varchar(1024)" >
 				<constraints nullable="false" ></constraints>
 			</column>
-			<column name="visit_id" type="int" />
+			<column name="visit_id" type="int" >
+				<constraints nullable="false" />
+			</column>
 			<column name="creator" type="int" />
 			<column name="date_created" type="datetime">
 				<constraints nullable="false" />
@@ -62,6 +66,53 @@
             <column name="date_created" valueDate="now()"/>
             <column name="uuid" value="9d4a3928-bf1b-4d72-9f26-55cc66a5f173"/>
         </insert>
+    </changeSet> 
+
+	<changeSet id="telemedicineconsult-2019-05-16-01" author="atlcto">
+		<preConditions onFail="MARK_RAN">
+			<not><tableExists tableName="telemedicineconsult_consult_note"/></not>
+		</preConditions>
+		<comment>
+			Creating the telemedicineconsult_consult_note table
+		</comment>
+		<createTable tableName="telemedicineconsult_consult_note">
+			<column name="telemedicineconsult_consult_note_id" type="int" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false"/>
+			</column>
+			<column name="uuid" type="char(38)">
+				<constraints nullable="false" unique="true"></constraints>
+			</column>
+			<column name="external_consult_id" type="int" >
+				<constraints nullable="false" />
+			</column>
+			<column name="obs_id" type="int" >
+				<constraints nullable="false" />
+			</column>
+			<column name="creator" type="int" />
+			<column name="date_created" type="datetime">
+				<constraints nullable="false" />
+			</column>
+			<column name="voided" type="boolean" defaultValueBoolean="false">
+				<constraints nullable="false" />
+			</column>
+			<column name="changed_by" type="int" />
+			<column name="voided_by" type="int" />
+			<column name="void_reason" type="varchar(255)" />
+			<column name="date_changed" type="datetime" />
+			<column name="date_voided" type="datetime" />
+		</createTable>
+        <addForeignKeyConstraint constraintName="telemedicineconsult_consult_note_ob_fk" 
+			baseTableName="telemedicineconsult_consult_note" baseColumnNames="obs_id"  
+			referencedTableName="obs" referencedColumnNames="obs_id" />
+        <addForeignKeyConstraint constraintName="telemedicineconsult_consult_note_creator_fk" 
+			baseTableName="telemedicineconsult_consult_note" baseColumnNames="creator"  
+			referencedTableName="users" referencedColumnNames="user_id" />
+		<addForeignKeyConstraint constraintName="telemedicineconsult_consult_note_voided_by_fk"
+			baseTableName="telemedicineconsult_consult_note" baseColumnNames="voided_by"
+			referencedTableName="users" referencedColumnNames="user_id" />
+		<addForeignKeyConstraint constraintName="telemedicineconsult_consult_note_hanged_by_fk"
+			baseTableName="telemedicineconsult_consult_note" baseColumnNames="changed_by"
+			referencedTableName="users" referencedColumnNames="user_id" />
     </changeSet> 
  
 </databaseChangeLog>
