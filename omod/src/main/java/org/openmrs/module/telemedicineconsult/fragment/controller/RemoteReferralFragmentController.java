@@ -5,8 +5,10 @@ import org.apache.commons.logging.LogFactory;
 import org.openmrs.ImplementationId;
 import org.openmrs.Patient;
 import org.openmrs.User;
+import org.openmrs.Visit;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.PatientService;
+import org.openmrs.api.VisitService;
 import org.openmrs.module.telemedicineconsult.api.TelemedicineConsultService;
 import org.openmrs.ui.framework.annotation.SpringBean;
 import org.openmrs.ui.framework.fragment.FragmentModel;
@@ -18,15 +20,15 @@ public class RemoteReferralFragmentController {
 	
 	protected final Log log = LogFactory.getLog(getClass());
 	
-	public Redirect get(FragmentModel model, @RequestParam("patientId") Integer patientId,
-	        @RequestParam(value = "returnUrl", required = false) String returnUrl,
-	        @SpringBean("patientService") PatientService service,
+	public Redirect get(FragmentModel model, @RequestParam("patientId") String patientId,
+	        @RequestParam("visitId") String visitId, @RequestParam(value = "returnUrl", required = false) String returnUrl,
+	        @SpringBean("visitService") VisitService visitService,
 	        @SpringBean("adminService") AdministrationService adminService) {
 		
-		Patient patient = service.getPatient(patientId);
+		Visit visit = visitService.getVisitByUuid(visitId);
 		
-		if (patient == null || patient.isVoided() || patient.isPersonVoided()) {
-			return new Redirect("coreapps", "patientdashboard/deletedPatient", "patientId=" + patientId.toString());
+		if (visit == null || visit.isVoided()) {
+			return new Redirect("coreapps", "clinicianfacing/patient.page", "patientId=" + patientId);
 		}
 		
 		ImplementationId impl = adminService.getImplementationId();
@@ -37,19 +39,20 @@ public class RemoteReferralFragmentController {
 	}
 	
 	public void submit(
-	        @RequestParam(value = "patientId", required = false) Integer patientId,
+	        @RequestParam(value = "patientId", required = false) String patientId,
+	        @RequestParam(value = "visitId", required = false) String visitId,
 	        @RequestParam(value = "reason", required = false) String reason,
 	        @RequestParam(value = "specialty", required = false) Integer specialtyId,
-	        @SpringBean("patientService") PatientService patientService,
+	        @SpringBean("visitService") VisitService visitService,
 	        @SpringBean("adminService") AdministrationService adminService,
 	        @SpringBean("telemedicineconsult.TelemedicineConsultService") TelemedicineConsultService telemedicineConsultService,
 	        FragmentModel model) {
 		
 		ImplementationId impl = adminService.getImplementationId();
 		User u = Context.getAuthenticatedUser();
-		Patient patient = patientService.getPatient(patientId);
+		Visit visit = visitService.getVisitByUuid(visitId);
 		
-		telemedicineConsultService.remoteReferral(impl, u, patient, reason, specialtyId);
+		telemedicineConsultService.remoteReferral(impl, u, visit, reason, specialtyId);
 	}
 	
 }

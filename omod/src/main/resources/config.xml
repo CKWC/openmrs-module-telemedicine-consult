@@ -7,7 +7,7 @@
 	<name>${project.parent.name}</name>
 	<version>${project.parent.version}</version>
 	<package>org.openmrs.module.telemedicineconsult</package>
-	<author>patrick</author>
+	<author>Connecting Kids With Care</author>
 	<description>
 			${project.parent.description}
 	</description>
@@ -20,6 +20,12 @@
 	<require_version>${openmrsPlatformVersion}</require_version>
 
 	<require_modules>
+		<require_module version="${emrapiVersion}">
+			org.openmrs.module.emrapi
+		</require_module>
+		<require_module version="${dataexchangeVersion}">
+			org.openmrs.module.dataexchange
+		</require_module>
 		<require_module version="${appframeworkVersion}">
 			org.openmrs.module.appframework
 		</require_module>
@@ -33,7 +39,7 @@
 			org.openmrs.module.appui
 		</require_module>
 	</require_modules>
-	
+
 	<!-- Extensions -->
 	<extension>
 		<point>org.openmrs.admin.list</point>

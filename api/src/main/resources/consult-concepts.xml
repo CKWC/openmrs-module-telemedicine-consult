@@ -1,0 +1,11 @@
+<dataset>
+<concept_datatype concept_datatype_id="3" name="Text" hl7_abbreviation="ST" description="Free text" creator="1" date_created="2004-02-02 00:00:00.0" retired="false" retired_by="1" uuid="8d4a4ab4-c2cc-11de-8d13-0010c6dffd0f"/>
+<concept_class concept_class_id="7" name="Question" description="Question (eg, patient history, SF36 items)" creator="1" date_created="2004-03-02 00:00:00.0" retired="false" retired_by="1" uuid="8d491e50-c2cc-11de-8d13-0010c6dffd0f" changed_by="1"/>
+<concept concept_id="164359" retired="false" datatype_id="3" class_id="7" is_set="false" creator="1" date_created="2017-12-07 00:00:00.0" version="1" changed_by="1" date_changed="2019-05-14 14:46:06.0" retired_by="1" uuid="164359AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
+<concept_description concept_description_id="18283" concept_id="164359" description="Non coded / text reason for referral" locale="en" creator="1" date_created="2017-12-07 00:00:00.0" changed_by="1" uuid="18283FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"/>
+<concept_name concept_name_id="140313" concept_id="164359" name="Reason for referral (text)" locale="en" locale_preferred="false" creator="1" date_created="2012-12-07 00:00:00.0" voided="false" voided_by="1" uuid="140313BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" date_changed="2019-05-14 14:46:06.0" changed_by="1"/>
+<concept_map_type concept_map_type_id="1" name="SAME-AS" creator="1" date_created="2017-11-03 00:00:00.0" changed_by="1" is_hidden="false" retired="false" retired_by="1" uuid="35543629-7d8c-11e1-909d-c80aa9edcf4e"/>
+<concept_reference_source concept_source_id="21" name="CIEL" description="Columbia International eHealth Laboratory concept ID" creator="1" date_created="2013-07-03 15:55:03.0" retired="false" retired_by="1" uuid="249b13c8-72fa-4b96-8d3d-b200efed985e" changed_by="1"/>
+<concept_reference_term concept_reference_term_id="283355" concept_source_id="21" name="Reason for referral (text)" code="164359" creator="1" date_created="2019-05-14 14:45:53.0" changed_by="1" retired="false" retired_by="1" uuid="a5233a23-750d-4fe5-8003-44a2f6221038"/>
+<concept_reference_map concept_map_id="283355" concept_reference_term_id="283355" concept_map_type_id="1" creator="1" date_created="2019-05-14 14:46:06.0" concept_id="164359" changed_by="1" uuid="139154a4-ff2e-4918-87a5-cbdbc13605a6"/>
+</dataset>

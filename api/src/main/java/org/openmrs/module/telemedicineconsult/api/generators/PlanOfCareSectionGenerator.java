@@ -6,9 +6,9 @@ import org.openhealthtools.mdht.uml.cda.Entry;
 import org.openhealthtools.mdht.uml.cda.EntryRelationship;
 import org.openhealthtools.mdht.uml.cda.Observation;
 import org.openhealthtools.mdht.uml.cda.StrucDocText;
-import org.openhealthtools.mdht.uml.cda.ccd.CCDFactory;
-import org.openhealthtools.mdht.uml.cda.ccd.ContinuityOfCareDocument;
-import org.openhealthtools.mdht.uml.cda.ccd.PlanOfCareSection;
+import org.openhealthtools.mdht.uml.cda.consol.ConsolFactory;
+import org.openhealthtools.mdht.uml.cda.consol.ContinuityOfCareDocument;
+import org.openhealthtools.mdht.uml.cda.consol.PlanOfCareSection;
 import org.openhealthtools.mdht.uml.cda.operations.SectionOperations;
 import org.openhealthtools.mdht.uml.hl7.datatypes.CD;
 import org.openhealthtools.mdht.uml.hl7.datatypes.CS;
@@ -43,45 +43,40 @@ public class PlanOfCareSectionGenerator {
 	@Autowired
 	private PatientSummaryExportDAO dao;
 	
+	private static final String CONCEPT_SOURCE = "CIEL";
+	
+	private static final String LAB_ORDERS_CONCEPT_CODE = "1271";
+	
+	private Concept LAB_ORDERS_CONCEPT = null;
+	
+	private void loadConcepts() {
+		if (LAB_ORDERS_CONCEPT == null) {
+			LAB_ORDERS_CONCEPT = Context.getConceptService().getConceptByMapping(LAB_ORDERS_CONCEPT_CODE, CONCEPT_SOURCE);
+		}
+	}
+	
 	public ContinuityOfCareDocument buildPlanOfCare(ContinuityOfCareDocument ccd, Patient patient) {
-		PlanOfCareSection section = CCDFactory.eINSTANCE.createPlanOfCareSection();
+		loadConcepts();
+		
+		PlanOfCareSection section = ConsolFactory.eINSTANCE.createPlanOfCareSection();
 		section.getTemplateIds().add(utils.buildTemplateID("2.16.840.1.113883.10.20.22.2.10"));
 		section.setCode(utils.buildCodeCE("18776-5", "2.16.840.1.113883.6.1", "Treatment plan", "LOINC"));
 		section.setTitle(utils.buildST("PLAN OF CARE"));
-		StringBuffer buffer = new StringBuffer();
-		buffer.append(utils.getBorderStart());
-		buffer.append("<thead>");
-		buffer.append("<tr>");
-		buffer.append("<th>Planned Activity</th>");
-		buffer.append("<th>Planned Date</th>");
-		List<Concept> labResultsList = this.dao.getConceptByCategory("PlanOfCare");
-		List<Obs> listOfObservations = new ArrayList();
-		Iterator i$ = labResultsList.iterator();
 		
-		while (true) {
-			while (i$.hasNext()) {
-				Concept concept = (Concept) i$.next();
-				if (concept != null && concept.isSet()) {
-					List<Concept> conceptSet = concept.getSetMembers();
-					Iterator ii$ = conceptSet.iterator();
-					
-					while (ii$.hasNext()) {
-						Concept conceptSet2 = (Concept) ii$.next();
-						listOfObservations.addAll(Context.getObsService().getObservationsByPersonAndConcept(patient,
-						    conceptSet2));
-					}
-				} else {
-					listOfObservations.addAll(Context.getObsService().getObservationsByPersonAndConcept(patient, concept));
-				}
-			}
+		List<Obs> listOfObservations = utils.extractObservations(patient, LAB_ORDERS_CONCEPT);
+		if (!listOfObservations.isEmpty()) {
 			
+			StringBuffer buffer = new StringBuffer();
+			buffer.append(utils.getBorderStart());
+			buffer.append("<thead>");
+			buffer.append("<tr>");
+			buffer.append("<th>Planned Activity</th>");
+			buffer.append("<th>Description</th>");
 			buffer.append("</tr>");
 			buffer.append("</thead>");
 			buffer.append("<tbody>");
-			i$ = listOfObservations.iterator();
 			
-			while (i$.hasNext()) {
-				Obs obs = (Obs) i$.next();
+			for (Obs obs : listOfObservations) {
 				buffer.append("<tr>");
 				buffer.append("<td><content id = \"" + obs.getConcept().getDisplayString() + "\">"
 				        + obs.getConcept().getDisplayString() + "</content></td>");
@@ -94,7 +89,7 @@ public class PlanOfCareSectionGenerator {
 						buffer.append("<td>" + obs.getValueCoded().getDisplayString() + "</td>");
 						break;
 					case 3:
-						buffer.append("<td>" + obs.getValueText() + "</td>");
+						buffer.append("<td>" + utils.htmlString(obs.getValueText()) + "</td>");
 					case 4:
 					case 5:
 					case 9:
@@ -155,8 +150,9 @@ public class PlanOfCareSectionGenerator {
 			buffer.append("</table>");
 			
 			utils.createStrucDocText(section, buffer.toString());
-			ccd.addSection(section);
-			return ccd;
 		}
+		
+		ccd.addSection(section);
+		return ccd;
 	}
 }

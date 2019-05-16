@@ -4,9 +4,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.openhealthtools.mdht.uml.cda.CDAFactory;
 import org.openhealthtools.mdht.uml.cda.Observation;
 import org.openhealthtools.mdht.uml.cda.StrucDocText;
-import org.openhealthtools.mdht.uml.cda.ccd.CCDFactory;
-import org.openhealthtools.mdht.uml.cda.ccd.ContinuityOfCareDocument;
-import org.openhealthtools.mdht.uml.cda.ccd.ResultsSection;
+import org.openhealthtools.mdht.uml.cda.consol.ConsolFactory;
+import org.openhealthtools.mdht.uml.cda.consol.ContinuityOfCareDocument;
+import org.openhealthtools.mdht.uml.cda.consol.ResultsSection;
 import org.openhealthtools.mdht.uml.cda.operations.SectionOperations;
 import org.openmrs.Concept;
 import org.openmrs.Obs;
@@ -31,7 +31,7 @@ public class LabResultsSectionGenerator {
 	private PatientSummaryExportDAO dao;
 	
 	public ContinuityOfCareDocument buildLabResults(ContinuityOfCareDocument ccd, Patient patient) {
-		ResultsSection section = CCDFactory.eINSTANCE.createResultsSection();
+		ResultsSection section = ConsolFactory.eINSTANCE.createResultsSection();
 		section.getTemplateIds().add(utils.buildTemplateID("2.16.840.1.113883.10.20.22.2.3.1"));
 		section.setCode(utils.buildCodeCE("30954-2", "2.16.840.1.113883.6.1", "RESULTS", "LOINC"));
 		section.setTitle(utils.buildST("RESULTS"));
@@ -40,7 +40,7 @@ public class LabResultsSectionGenerator {
 		Concept concept = Context.getConceptService().getConcept(LAB_RESULTS_CONCEPT_ID);
 		List<Obs> listOfObservations = utils.extractObservations(patient, concept);
 		if (!listOfObservations.isEmpty()) {
-			builder.append(utils.buildSectionHeader("Nom du test", "Date", "Résultat"));
+			builder.append(utils.buildSectionHeader("Test", "Date", "Result"));
 			for (Obs obs : listOfObservations) {
 				builder.append(utils.buildSectionContent(obs.getValueCoded().getDisplayString(),
 				    utils.format(obs.getDateCreated()), getValueOfObs(patient, obs)));
@@ -73,7 +73,7 @@ public class LabResultsSectionGenerator {
 		} else if (observation.getValueCoded() != null) {
 			return observation.getValueCoded().getDisplayString();
 		} else if (observation.getValueBoolean() != null) {
-			return observation.getValueBoolean() ? "Oui" : "Non";
+			return observation.getValueBoolean() ? "Abnormal" : "Normal";
 		} else {
 			return "-";
 		}

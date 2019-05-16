@@ -2,9 +2,9 @@ package org.openmrs.module.telemedicineconsult.api.generators;
 
 import org.openhealthtools.mdht.uml.cda.CDAFactory;
 import org.openhealthtools.mdht.uml.cda.StrucDocText;
-import org.openhealthtools.mdht.uml.cda.ccd.CCDFactory;
-import org.openhealthtools.mdht.uml.cda.ccd.ContinuityOfCareDocument;
-import org.openhealthtools.mdht.uml.cda.ccd.ImmunizationsSection;
+import org.openhealthtools.mdht.uml.cda.consol.ConsolFactory;
+import org.openhealthtools.mdht.uml.cda.consol.ContinuityOfCareDocument;
+import org.openhealthtools.mdht.uml.cda.consol.ImmunizationsSection;
 import org.openhealthtools.mdht.uml.cda.operations.SectionOperations;
 import org.openmrs.Concept;
 import org.openmrs.ConceptNumeric;
@@ -59,7 +59,7 @@ public class ImmunizationsSectionGenerator {
 	private PatientSummaryExportDAO dao;
 	
 	public ContinuityOfCareDocument buildImmunizations(ContinuityOfCareDocument ccd, Patient patient) {
-		ImmunizationsSection section = CCDFactory.eINSTANCE.createImmunizationsSection();
+		ImmunizationsSection section = ConsolFactory.eINSTANCE.createImmunizationsSection();
 		
 		section.getTemplateIds().add(utils.buildTemplateID("2.16.840.1.113883.10.20.22.2.2.1"));
 		section.setCode(utils.buildCodeCE("11369-6", "2.16.840.1.113883.6.1", "History of immunizations", "LOINC"));
