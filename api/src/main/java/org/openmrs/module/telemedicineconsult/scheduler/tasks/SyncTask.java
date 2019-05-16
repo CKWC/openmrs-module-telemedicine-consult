@@ -66,7 +66,7 @@ public class SyncTask extends AbstractTask {
 				}
 				json.append("]");
 				
-				URL url = new URL("https://staging.connectingkidswithcare.org/api/emr/consult/status");
+				URL url = new URL("https://portal.connectingkidswithcare.org/api/emr/consult/status");
 				
 				int responseCode;
 				JSONArray resp = post(url, json.toString());

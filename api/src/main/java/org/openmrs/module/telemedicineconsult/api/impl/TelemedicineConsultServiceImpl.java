@@ -186,7 +186,7 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 			
 			ContinuityOfCareDocument ccd = produceCCD(impl, patient, u, reason);
 			if (ccd != null) {
-				URL url = new URL("https://staging.connectingkidswithcare.org/api/emr/consult");
+				URL url = new URL("https://portal.connectingkidswithcare.org/api/emr/consult");
 				Map<String, String> parameters = new HashMap<String, String>();
 				parameters.put("first_name", u.getGivenName());
 				parameters.put("last_name", u.getFamilyName());
