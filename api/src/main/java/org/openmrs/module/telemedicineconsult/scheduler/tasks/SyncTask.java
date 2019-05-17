@@ -104,23 +104,74 @@ public class SyncTask extends AbstractTask {
 	private String consultToNoteText(JSONObject consult) throws JSONException {
 		
 		// 							int patient_id = consult.getInt("patient_id");
-		String summary = consult.getString("summary");
-		String comments = consult.getString("comments");
-		String recommendation = consult.getString("recommendation");
-		String diagnosis = consult.getString("diagnosis");
-		String background_info = consult.getString("background_info");
-		String qol_wo_treatment = consult.getString("qol_wo_treatment");
-		String qol_w_treatment = consult.getString("qol_w_treatment");
-		String disclaimer = consult.getString("disclaimer");
-		String created_at = consult.getString("created_at");
-		String update_at = consult.getString("update_at");
-		String purpose = consult.getString("purpose");
-		String external_id = consult.getString("external_id");
+		String summary = null;
+		String comments = null;
+		String recommendation = null;
+		String diagnosis = null;
+		String background_info = null;
+		String qol_wo_treatment = null;
+		String qol_w_treatment = null;
+		String disclaimer = null;
+		String created_at = null;
+		String update_at = null;
+		String purpose = null;
+		String external_id = null;
+		int doctor_id = -1;
+		String doctor_name = null;
+		String doctor_specialty = null;
 		
-		JSONObject doctor = (JSONObject) consult.get("doctor");
-		int doctor_id = doctor.getInt("id");
-		String doctor_name = doctor.getString("name");
-		String doctor_specialty = doctor.getString("specialty");
+		if (consult.has("summary")) {			
+			summary = consult.getString("summary");
+		}
+		if (consult.has("comments")) {			
+			comments = consult.getString("comments");
+		}
+		if (consult.has("recommendation")) {			
+			recommendation = consult.getString("recommendation");
+		}
+		if (consult.has("diagnosis")) {			
+			diagnosis = consult.getString("diagnosis");
+		}
+		if (consult.has("background_info")) {			
+			background_info = consult.getString("background_info");
+		}
+		if (consult.has("qol_wo_treatment")) {			
+			qol_wo_treatment = consult.getString("qol_wo_treatment");
+		}
+		if (consult.has("qol_w_treatment")) {			
+			qol_w_treatment = consult.getString("qol_w_treatment");
+		}
+		if (consult.has("disclaimer")) {			
+			disclaimer = consult.getString("disclaimer");
+		}
+		if (consult.has("created_at")) {			
+			created_at = consult.getString("created_at");
+		}
+		if (consult.has("update_at")) {			
+			update_at = consult.getString("update_at");
+		}
+		if (consult.has("purpose")) {			
+			purpose = consult.getString("purpose");
+		}
+		if (consult.has("external_id")) {			
+			external_id = consult.getString("external_id");
+		}
+
+		if (consult.has("doctor")) {			
+			JSONObject doctor = (JSONObject) consult.get("doctor");
+
+			if (doctor.has("id")) {
+				doctor_id = doctor.getInt("id");
+			}
+
+			if (doctor.has("name")) {
+				doctor_name = doctor.getString("name");
+			}
+
+			if (doctor.has("specialty")) {
+				doctor_specialty = doctor.getString("specialty");
+			}
+		}
 		
 		StringBuilder consultText = new StringBuilder();
 		if (!StringUtils.isEmpty(background_info)) {
