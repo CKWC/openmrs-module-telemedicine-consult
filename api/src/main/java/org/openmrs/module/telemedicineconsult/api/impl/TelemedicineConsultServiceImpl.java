@@ -204,16 +204,18 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 				JSONObject resp = post(ccd, url, parameters);
 				log.info(resp);
 				
-				String token = resp.getString("token");
-				
-				Consult consult = new Consult();
-				consult.setCreator(u);
-				consult.setToken(token);
-				consult.setCompleted(false);
-				consult.setVisitId(visit.getId());
-				
-				dao.saveConsult(consult);
-				return consult;
+				if (resp != null && resp.has("token")) {
+					String token = resp.getString("token");
+					
+					Consult consult = new Consult();
+					consult.setCreator(u);
+					consult.setToken(token);
+					consult.setCompleted(false);
+					consult.setVisitId(visit.getId());
+					
+					dao.saveConsult(consult);
+					return consult;
+				}
 			}
 		}
 		catch (JSONException e) {
