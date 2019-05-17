@@ -120,54 +120,54 @@ public class SyncTask extends AbstractTask {
 		String doctor_name = null;
 		String doctor_specialty = null;
 		
-		if (consult.has("summary")) {			
+		if (consult.has("summary")) {
 			summary = consult.getString("summary");
 		}
-		if (consult.has("comments")) {			
+		if (consult.has("comments")) {
 			comments = consult.getString("comments");
 		}
-		if (consult.has("recommendation")) {			
+		if (consult.has("recommendation")) {
 			recommendation = consult.getString("recommendation");
 		}
-		if (consult.has("diagnosis")) {			
+		if (consult.has("diagnosis")) {
 			diagnosis = consult.getString("diagnosis");
 		}
-		if (consult.has("background_info")) {			
+		if (consult.has("background_info")) {
 			background_info = consult.getString("background_info");
 		}
-		if (consult.has("qol_wo_treatment")) {			
+		if (consult.has("qol_wo_treatment")) {
 			qol_wo_treatment = consult.getString("qol_wo_treatment");
 		}
-		if (consult.has("qol_w_treatment")) {			
+		if (consult.has("qol_w_treatment")) {
 			qol_w_treatment = consult.getString("qol_w_treatment");
 		}
-		if (consult.has("disclaimer")) {			
+		if (consult.has("disclaimer")) {
 			disclaimer = consult.getString("disclaimer");
 		}
-		if (consult.has("created_at")) {			
+		if (consult.has("created_at")) {
 			created_at = consult.getString("created_at");
 		}
-		if (consult.has("update_at")) {			
+		if (consult.has("update_at")) {
 			update_at = consult.getString("update_at");
 		}
-		if (consult.has("purpose")) {			
+		if (consult.has("purpose")) {
 			purpose = consult.getString("purpose");
 		}
-		if (consult.has("external_id")) {			
+		if (consult.has("external_id")) {
 			external_id = consult.getString("external_id");
 		}
-
-		if (consult.has("doctor")) {			
+		
+		if (consult.has("doctor")) {
 			JSONObject doctor = (JSONObject) consult.get("doctor");
-
+			
 			if (doctor.has("id")) {
 				doctor_id = doctor.getInt("id");
 			}
-
+			
 			if (doctor.has("name")) {
 				doctor_name = doctor.getString("name");
 			}
-
+			
 			if (doctor.has("specialty")) {
 				doctor_specialty = doctor.getString("specialty");
 			}
@@ -179,7 +179,7 @@ public class SyncTask extends AbstractTask {
 			consultText.append(background_info);
 			consultText.append("\n\n");
 		}
-		if (!StringUtils.isEmpty(background_info)) {
+		if (!StringUtils.isEmpty(diagnosis)) {
 			consultText.append("Diagnosis:\n");
 			consultText.append(diagnosis);
 			consultText.append("\n\n");

@@ -257,6 +257,10 @@ public class TelemedicineConsultServiceImpl extends BaseOpenmrsService implement
 			EncounterService encounterService = Context.getEncounterService();
 			
 			Date now = new Date();
+			if (visit.getStopDatetime() != null && visit.getStopDatetime().before(now)) {
+				now = visit.getStopDatetime();
+			}
+			
 			Encounter e = new Encounter();
 			e.setPatient(visit.getPatient());
 			e.setDateCreated(now);
